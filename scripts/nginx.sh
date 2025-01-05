@@ -11,3 +11,5 @@ sudo ln -s /etc/nginx/sites-available/EcommerceApplication /etc/nginx/sites-enab
 sudo gpasswd -a www-data ubuntu
 sudo systemctl restart nginx
 
+
+
