@@ -9,7 +9,6 @@ WorkingDirectory=/home/ubuntu/EcommerceApplication-Python
 ExecStart=/home/ubuntu/env/bin/gunicorn \
     --workers 3 \
     --bind unix:/home/ubuntu/EcommerceApplication-Python/gunicorn/gunicorn.socket \
-    --error-logfile /home/ubuntu/EcommerceApplication-Python/logs/gunicorn-error.log \
     EcommerceApplication.wsgi:application
 
 
