@@ -11,7 +11,10 @@ WorkingDirectory=/home/ubuntu/EcommerceApplication-Python
 ExecStart=/home/ubuntu/env/bin/gunicorn \
     --workers 3 \
     --bind unix:/home/ubuntu/EcommerceApplication-Python/gunicorn/gunicorn.socket \
-    EcommerceApplication.wsgi:application
+    EcommerceApplication.wsgi:application \
+    --log-file /home/ubuntu/EcommerceApplication-Python/logs/gunicorn.log \
+    --log-level debug
+
 
 [Install]
 WantedBy=multi-user.target
