@@ -6,12 +6,12 @@ After=network.target
 User=ubuntu
 Group=www-data
 WorkingDirectory=/home/ubuntu/EcommerceApplication-Python
+
+
 ExecStart=/home/ubuntu/env/bin/gunicorn \
     --workers 3 \
     --bind unix:/home/ubuntu/EcommerceApplication-Python/gunicorn/gunicorn.socket \
     EcommerceApplication.wsgi:application
-
-
 
 [Install]
 WantedBy=multi-user.target
