@@ -1,6 +1,4 @@
-import os
 from django.http import JsonResponse, HttpResponseForbidden
-from django.conf import settings
 
 def data_view(request):
     return JsonResponse({
