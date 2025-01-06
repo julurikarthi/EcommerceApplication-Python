@@ -14,8 +14,8 @@ def view_logs(request):
     # Define log file paths
     log_files = {
         "nginx_error": "/var/log/nginx/error.log",
-        "gunicorn_error": "/home/ubuntu/EcommerceApplication-Python/logs/gunicorn-error.log",  # Adjust the path if necessary
-        "django_debug": "/var/log/django/debug.log",  # Match your Django log config
+        "gunicorn_error": "/var/log/gunicorn-error.log",
+        "django_debug": "/var/log/django/debug.log",
     }
 
     logs_content = {}
