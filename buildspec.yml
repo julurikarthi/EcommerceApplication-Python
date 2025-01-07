@@ -16,12 +16,31 @@ phases:
     commands:
       - echo Prebuild ops
       - pip3 install -r requirements.txt
+
   build:
     commands:
-      - echo Building the application 
+      - echo Building the application
+
   post_build:
     commands:
       - echo Build completed on `date`
+
+      # Remove the existing symlink if it exists
+      - echo "Checking if symlink exists and removing it..."
+      - if [ -L /etc/nginx/sites-enabled/EcommerceApplication ]; then sudo rm /etc/nginx/sites-enabled/EcommerceApplication; fi
+
+      # Copy the nginx configuration from the correct path
+      - echo "Copying nginx configuration..."
+      - sudo cp nginx/nginx.conf /etc/nginx/sites-available/EcommerceApplication
+
+      # Create the symbolic link
+      - echo "Creating symbolic link..."
+      - sudo ln -s /etc/nginx/sites-available/EcommerceApplication /etc/nginx/sites-enabled/
+
+      # Reload nginx
+      - echo "Reloading Nginx..."
+      - sudo systemctl reload nginx
+
 artifacts:
   files:
     - '**/*'
