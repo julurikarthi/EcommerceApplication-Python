@@ -45,7 +45,6 @@ phases:
       # Reload nginx
       - echo "Reloading Nginx..."
       - sudo systemctl reload nginx
-
 artifacts:
   files:
     - '**/*'
