@@ -25,6 +25,10 @@ phases:
     commands:
       - echo Build completed on `date`
 
+      # Ensure the nginx sites-available directory exists
+      - echo "Checking if /etc/nginx/sites-available exists and creating if necessary..."
+      - sudo mkdir -p /etc/nginx/sites-available
+
       # Remove the existing symlink if it exists
       - echo "Checking if symlink exists and removing it..."
       - if [ -L /etc/nginx/sites-enabled/EcommerceApplication ]; then sudo rm /etc/nginx/sites-enabled/EcommerceApplication; fi
