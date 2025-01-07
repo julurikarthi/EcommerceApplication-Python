@@ -10,7 +10,9 @@ sudo rm -f /etc/nginx/sites-enabled/default || { echo "Error: Failed to remove d
 
 # Copy the custom Nginx configuration for the application
 echo "Copying custom nginx configuration..."
+- sudo rm -rf /etc/nginx/sites-enabled/EcommerceApplication
 sudo cp /home/ubuntu/EcommerceApplication-Python/nginx/nginx.conf /etc/nginx/sites-available/EcommerceApplication || { echo "Error: Failed to copy nginx.conf"; exit 1; }
+echo "successfully copied nignx"
 
 # Create a symbolic link to enable the site
 echo "Creating symbolic link for the site..."
