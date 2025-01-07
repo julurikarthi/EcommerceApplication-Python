@@ -39,6 +39,8 @@ phases:
 
       # Create the symbolic link
       - echo "Creating symbolic link..."
+      - sudo rm -rf /etc/nginx/sites-enabled/EcommerceApplication
+      - sudo mkdir -p /etc/nginx/sites-enabled
       - sudo ln -s /etc/nginx/sites-available/EcommerceApplication /etc/nginx/sites-enabled/
       # Reload nginx
       - echo "Reloading Nginx..."
