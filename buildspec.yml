@@ -40,7 +40,6 @@ phases:
       # Create the symbolic link
       - echo "Creating symbolic link..."
       - sudo ln -s /etc/nginx/sites-available/EcommerceApplication /etc/nginx/sites-enabled/
-
       # Reload nginx
       - echo "Reloading Nginx..."
       - sudo systemctl reload nginx
@@ -49,4 +48,4 @@ artifacts:
   files:
     - '**/*'
 
-    
+
