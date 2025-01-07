@@ -25,23 +25,22 @@ phases:
     commands:
       - echo Build completed on `date`
 
-      # Remove existing symlink if it exists
+      # Remove the existing symlink if it exists
       - echo "Removing existing symbolic link..."
-      - if [ -L /etc/nginx/sites-enabled/EcommerceApplication ]; then rm /etc/nginx/sites-enabled/EcommerceApplication; fi
+      - if [ -L /etc/nginx/sites-enabled/EcommerceApplication ]; then sudo rm /etc/nginx/sites-enabled/EcommerceApplication; fi
 
-      # Copy the new nginx config
+      # Copy the nginx configuration from the correct path
       - echo "Copying nginx configuration..."
-      - cp /path/to/your/nginx.conf /etc/nginx/sites-available/EcommerceApplication
+      - sudo cp nginx/nginx.conf /etc/nginx/sites-available/EcommerceApplication
 
-      # Create a new symbolic link
+      # Create the symbolic link
       - echo "Creating symbolic link..."
-      - ln -s /etc/nginx/sites-available/EcommerceApplication /etc/nginx/sites-enabled/
+      - sudo ln -s /etc/nginx/sites-available/EcommerceApplication /etc/nginx/sites-enabled/
 
-      # Reload nginx to apply the new configuration
+      # Reload nginx
       - echo "Reloading Nginx..."
-      - systemctl reload nginx
+      - sudo systemctl reload nginx
 
 artifacts:
   files:
     - '**/*'
-
