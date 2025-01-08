@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponseForbidden
 def data_view(request):
     # Intentionally raise an error to simulate a crash
     return JsonResponse({
-        "message": "start the project eleven",
+        "message": "start the project newele",
         "status": "success",
         "data": {"id": 1, "name": "Sample Item"}
     })
