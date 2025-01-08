@@ -3,14 +3,15 @@
 # Modify the settings.py file to update allowed hosts dynamically
 sed -i 's/\[]/\["3.16.168.145"]/' /home/ubuntu/EcommerceApplication-Python/EcommerceApplication/settings.py
 
-if [ ! -d /run/gunicorn ]; then
-    echo "Creating /run/gunicorn directory..."
-    sudo mkdir -p /run/gunicorn
-    sudo chown www-data:www-data /run/gunicorn
-    sudo chmod 775 /run/gunicorn
+if [ ! -d /mnt/ebs/gunicorn ]; then
+    echo "Creating /mnt/ebs/gunicorn directory..."
+    sudo mkdir -p /mnt/ebs/gunicorn
+    sudo chown www-data:www-data /mnt/ebs/gunicorn
+    sudo chmod 775 /mnt/ebs/gunicorn
 else
-    echo "/run/gunicorn already exists."
+    echo "/mnt/ebs/gunicorn already exists."
 fi
+
 
 # Apply database migrations
 python manage.py migrate 

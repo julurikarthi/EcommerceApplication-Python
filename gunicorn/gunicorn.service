@@ -6,7 +6,7 @@ After=network.target
 User=ubuntu
 Group=www-data
 WorkingDirectory=/home/ubuntu/EcommerceApplication-Python
-ExecStart=/home/ubuntu/env/bin/gunicorn --workers 3 --bind unix:/run/gunicorn/gunicorn.sock --chdir /home/ubuntu/EcommerceApplication-Python EcommerceApplication.wsgi:application
+ExecStart=/home/ubuntu/env/bin/gunicorn --workers 3 --bind unix:/mnt/ebs/gunicorn/gunicorn.sock --chdir /home/ubuntu/EcommerceApplication-Python EcommerceApplication.wsgi:application
 
 
 [Install]
