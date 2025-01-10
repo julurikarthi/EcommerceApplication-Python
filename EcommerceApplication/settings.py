@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'EcommerceApplication.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'MarketPlaceDatabase',  # Replace with your MongoDB database name
+        'CLIENT': {
+            'host': '3.16.168.145',       # MongoDB host (use public IP if MongoDB is on another server)
+            'port': 27017,
+        },
     }
 }
 
