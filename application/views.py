@@ -9,8 +9,14 @@ def data_view(request):
     })
 
 def createDatabase(request):
-    client = MongoClient("mongodb://3.16.168.145:27017/")
-    db = client['MarketPlaceDatabase']  
+    try:
+        client = MongoClient("mongodb://3.16.168.145:27017/")
+        db = client['MarketPlaceDatabase']  
 
-    db.your_collection_name.insert_one({"key": "value"})
-    print("Database and collection created successfully!")
+        # Create a collection and insert a document
+        db.your_collection_name.insert_one({"key": "value"})
+
+        return JsonResponse({"message": "Database and collection created successfully!"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
