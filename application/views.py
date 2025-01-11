@@ -2,16 +2,11 @@
 from django.http import JsonResponse
 # from pymongo.errors import ConnectionFailure
 # import json
-
+from django.http import HttpResponse
 # MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
 def data_view(request):
-    # Intentionally raise an error to simulate a crash
-    return JsonResponse({
-        "message": "start the project newele",
-        "status": "success",
-        "data": {"id": 1, "name": "Sample Item"}
-    })
+    return HttpResponse("Hello, world!")
 
 # def createStore(request):
 #     if request.method == 'POST':
