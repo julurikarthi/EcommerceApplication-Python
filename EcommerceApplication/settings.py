@@ -79,7 +79,7 @@ DATABASES = {
         'ENGINE': 'djongo',
         'NAME': 'MarketPlaceDatabase',  # Replace with your MongoDB database name
         'CLIENT': {
-            'host': '3.16.168.145',       # MongoDB host (use public IP if MongoDB is on another server)
+            'host': '0.0.0.0',       # MongoDB host (use public IP if MongoDB is on another server)
             'port': 27017,
         },
     }
