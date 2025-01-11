@@ -20,9 +20,11 @@ def createStore(request):
             # Validate the required fields
             store_name = data.get('store_name')
             store_type = data.get('store_type')
+            image_id = data.get('image_id')
+            customer_id = data.get('customer_id')
             
-            if not store_name or not store_type:
-                return JsonResponse({"error": "Both 'store_name' and 'store_type' are required."}, status=400)
+            if not store_name or not store_type or not image_id:
+                return JsonResponse({"error": "Both 'store_name' and 'store_type' and 'image_id' are required."}, status=400)
             
             # Optional field: address
             address = data.get('address', None)
@@ -34,6 +36,8 @@ def createStore(request):
             store_data = {
                 "store_name": store_name,
                 "store_type": store_type,
+                "image_id": image_id,
+                "customer_id": customer_id,
                 "address": address,
             }
             collection = db['Stores']
