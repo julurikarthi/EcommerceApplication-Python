@@ -3,11 +3,14 @@ from django.http import JsonResponse
 from pymongo.errors import ConnectionFailure
 import json
 from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
 def data_view(request):
     return HttpResponse("Hello, world!")
 
+@csrf_exempt
 def createStore(request):
     if request.method == 'POST':
         try:
