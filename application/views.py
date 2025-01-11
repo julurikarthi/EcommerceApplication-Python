@@ -20,7 +20,8 @@ def createDatabase(request):
         db = client['MarketPlaceDatabase']  
 
         # Create a collection and insert a document
-        db.your_collection_name.insertOne({"key": "value"})
+        collection = db['UsersData']  # Access the collection (it will be created if it doesn't exist)
+        collection.insert_one({"one": "value"})
 
         return JsonResponse({"message": "Database and collection created successfully!"}, status=200)
 
