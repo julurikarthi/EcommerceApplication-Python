@@ -1,7 +1,7 @@
 #!/usr/bin/bash 
 
 # Modify the settings.py file to update allowed hosts dynamically
-sed -i 's/\[]/\["3.16.168.145"]/' /home/ubuntu/EcommerceApplication-Python/EcommerceApplication/settings.py
+sed -i 's/\[]/\["18.188.42.21"]/' /home/ubuntu/EcommerceApplication-Python/EcommerceApplication/settings.py
 
 if [ ! -d /mnt/ebs/gunicorn ]; then
     echo "Creating /mnt/ebs/gunicorn directory..."
