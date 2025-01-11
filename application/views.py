@@ -1,5 +1,6 @@
-from django.http import JsonResponse, HttpResponseForbidden
 from pymongo import MongoClient
+from django.http import JsonResponse
+from pymongo.errors import ConnectionFailure
 def data_view(request):
     # Intentionally raise an error to simulate a crash
     return JsonResponse({
@@ -10,13 +11,21 @@ def data_view(request):
 
 def createDatabase(request):
     try:
-        client = MongoClient("mongodb://3.16.168.145:27017/")
+        # MongoDB client with a timeout setting
+        client = MongoClient("mongodb://3.16.168.145:27017/", serverSelectionTimeoutMS=5000)
+        
+        # Attempt to check the connection
+        client.server_info()  # This will throw an exception if unable to connect
+
         db = client['MarketPlaceDatabase']  
 
         # Create a collection and insert a document
         db.your_collection_name.insert_one({"key": "value"})
 
         return JsonResponse({"message": "Database and collection created successfully!"}, status=200)
+
+    except ConnectionFailure as e:
+        return JsonResponse({"error": f"Could not connect to MongoDB: {str(e)}"}, status=500)
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
