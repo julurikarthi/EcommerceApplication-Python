@@ -1,13 +1,14 @@
 from pymongo import MongoClient
 from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse
 from pymongo.errors import ConnectionFailure
 import json
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-import boto3
-from botocore.exceptions import NoCredentialsError
-from django.core.files.storage import default_storage
+# import json
+# from django.http import HttpResponse
+# from django.conf import settings
+# import boto3
+# from django.core.files.storage import default_storage
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -79,27 +80,27 @@ def getDatabase():
     except ConnectionFailure as e:
         raise ConnectionFailure(f"Could not connect to MongoDB: {str(e)}")
     
-@csrf_exempt
-def uploadImage(request):
-    if request.method == 'POST':
-        try:
-            # Check if file is in the request
-            if 'image' not in request.FILES:
-                return JsonResponse({"error": "No image file found in the request."}, status=400)
+# @csrf_exempt
+# def uploadImage(request):
+#     if request.method == 'POST':
+#         try:
+#             # Check if file is in the request
+#             if 'image' not in request.FILES:
+#                 return JsonResponse({"error": "No image file found in the request."}, status=400)
             
-            # Get the file from the request
-            image_file = request.FILES['image']
+#             # Get the file from the request
+#             image_file = request.FILES['image']
             
-            # Save the file using the default storage backend (S3 in this case)
-            file_path = default_storage.save(image_file.name, image_file)
+#             # Save the file using the default storage backend (S3 in this case)
+#             file_path = default_storage.save(image_file.name, image_file)
             
-            # Get the URL for accessing the uploaded file
-            file_url = default_storage.url(file_path)
+#             # Get the URL for accessing the uploaded file
+#             file_url = default_storage.url(file_path)
             
-            # Return the URL of the uploaded image
-            return JsonResponse({"message": "Image uploaded successfully.", "url": file_url}, status=200)
+#             # Return the URL of the uploaded image
+#             return JsonResponse({"message": "Image uploaded successfully.", "url": file_url}, status=200)
         
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
-    else:
-        return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)
+#         except Exception as e:
+#             return JsonResponse({"error": str(e)}, status=500)
+#     else:
+#         return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)

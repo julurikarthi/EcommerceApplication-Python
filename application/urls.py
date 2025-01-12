@@ -1,6 +1,5 @@
 from django.urls import path
 from . import views
-import os
 
 urlpatterns = [
     path('data/', views.data_view, name='data_view'),
