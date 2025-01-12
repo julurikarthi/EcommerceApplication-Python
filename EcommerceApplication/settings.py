@@ -32,15 +32,18 @@ ALLOWED_HOSTS = ['*']
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # AWS S3 Configuration
-AWS_ACCESS_KEY_ID = 'AKIA6GBMEQ7ZW6EFSWFA'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME = 'marketplacemediauploads'  
-AWS_S3_REGION_NAME = 'us-east-2' 
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'marketplacemediauploads'
+AWS_S3_REGION_NAME = 'us-east-2'
 
-# Use the default S3 URL for accessing files
+# Static files URL for S3 (change this if you're using a custom domain)
 STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
 
-# For managing file storage on S3:
+# For media file storage on S3
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/media/'
+
+# Use the S3Boto3Storage backend for file storage
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 
