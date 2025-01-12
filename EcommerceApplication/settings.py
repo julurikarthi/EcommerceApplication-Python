@@ -30,19 +30,19 @@ ALLOWED_HOSTS = ['*']
 
 
 # AWS S3 Configuration
-# AWS_ACCESS_KEY_ID = 'AKIA6GBMEQ7ZW6EFSWFA'
-# AWS_SECRET_ACCESS_KEY = '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'
-# AWS_STORAGE_BUCKET_NAME = 'marketplacemediauploads'  
-# AWS_S3_REGION_NAME = 'us-east-2' 
+AWS_ACCESS_KEY_ID = 'AKIA6GBMEQ7ZW6EFSWFA'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'marketplacemediauploads'  
+AWS_S3_REGION_NAME = 'us-east-2' 
 
-# # Use the default S3 URL for accessing files
-# MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
+# Use the default S3 URL for accessing files
+MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
 
-# # For managing file storage on S3:
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+# For managing file storage on S3:
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 
-# DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 
 # Application definition
