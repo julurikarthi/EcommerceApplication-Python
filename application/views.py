@@ -4,6 +4,8 @@ from pymongo.errors import ConnectionFailure
 import json
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.core.files.storage import FileSystemStorage
+
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -74,3 +76,37 @@ def getDatabase():
         return db
     except ConnectionFailure as e:
         raise ConnectionFailure(f"Could not connect to MongoDB: {str(e)}")
+    
+@csrf_exempt
+def uploadImage(request):
+    if request.method == 'POST':
+        try:
+            # Check if an image is included in the request
+            image_file = request.FILES.get('image')
+            if not image_file:
+                return JsonResponse({"error": "No image file provided."}, status=400)
+
+            # Save the image to the server
+            fs = FileSystemStorage(location='uploads/')  # Customize the path as needed
+            filename = fs.save(image_file.name, image_file)
+            image_path = fs.url(filename)
+
+            # Save the image reference to MongoDB
+            db = getDatabase()
+            collection = db['AllImages']
+            image_data = {
+                "filename": filename,
+                "path": image_path
+            }
+            result = collection.insert_one(image_data)
+
+            return JsonResponse({
+                "message": "Image uploaded successfully!",
+                "image_id": str(result.inserted_id),
+                "image_url": image_path
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)
