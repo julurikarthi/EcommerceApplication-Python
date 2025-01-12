@@ -5,7 +5,6 @@ from django.http import HttpResponse
 from pymongo.errors import ConnectionFailure
 import json
 from django.conf import settings
-import boto3
 from django.core.files.storage import default_storage
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
