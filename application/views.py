@@ -10,7 +10,7 @@ from django.core.files.storage import default_storage
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
 def data_view(request):
-    return HttpResponse("Hello, world!")
+    return HttpResponse("Hello, world")
 
 @csrf_exempt
 def createStore(request):
