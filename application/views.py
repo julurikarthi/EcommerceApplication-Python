@@ -6,6 +6,7 @@ from pymongo.errors import ConnectionFailure
 import json
 from django.conf import settings
 from django.core.files.storage import default_storage
+from django.http import HttpResponse, Http404
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -92,12 +93,38 @@ def uploadImage(request):
             file_path = default_storage.save(image_file.name, image_file)
             
             # Get the URL for accessing the uploaded file
-            file_url = default_storage.url(file_path)
+            # Extract only the file name from the file path
+            file_name = file_path.split("/")[-1]
             
-            # Return the URL of the uploaded image
-            return JsonResponse({"message": "Image uploaded successfully.", "url": file_url}, status=200)
+            # Return only the file name
+            return JsonResponse({"message": "Image uploaded successfully.", "file_name": file_name}, status=200)
+        
         
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)
+
+@csrf_exempt
+def downloadImage(request):
+    if request.method == 'GET':
+        try:
+            # Get the file name from the query parameters
+            file_name = request.GET.get('file_name')
+            
+            if not file_name:
+                return JsonResponse({"error": "No file name provided."}, status=400)
+            
+            # Use default_storage to construct the file path
+            file_path = file_name  # Assuming the file name corresponds to the file path in S3
+            
+            # Get the URL for accessing the file
+            file_url = default_storage.url(file_path)
+            
+            # Return the file URL for downloading
+            return JsonResponse({"message": "File URL generated successfully.", "url": file_url}, status=200)
+        
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid request method. Use GET."}, status=405)

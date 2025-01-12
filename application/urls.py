@@ -5,4 +5,5 @@ urlpatterns = [
     path('data/', views.data_view, name='data_view'),
     path('createStore/', views.createStore, name='createStore'),
     path('uploadImage/', views.uploadImage, name='uploadImage'),
+    path('downloadImage/', views.downloadImage, name='downloadImage'),
 ]
