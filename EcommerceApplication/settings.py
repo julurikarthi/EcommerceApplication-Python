@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-pq*48)m&ug1bor4(!7h4djkkxsaamb@fz7y!567+hb1-%ya&0m
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
 # Define where the static files should be collected on disk
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
@@ -38,7 +38,7 @@ AWS_STORAGE_BUCKET_NAME = 'marketplacemediauploads'
 AWS_S3_REGION_NAME = 'us-east-2' 
 
 # Use the default S3 URL for accessing files
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
+STATIC_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com/'
 
 # For managing file storage on S3:
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
@@ -137,7 +137,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
-STATIC_URL = '/static/'
+# STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
