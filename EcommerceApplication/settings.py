@@ -29,7 +29,6 @@ ALLOWED_HOSTS = ['*']
 STATIC_URL = '/static/'
 # Define where the static files should be collected on disk
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
