@@ -30,8 +30,8 @@ STATIC_URL = '/static/'
 # Define where the static files should be collected on disk
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # AWS S3 Configuration
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_ACCESS_KEY_ID = os.getenv('AKIA6GBMEQ7ZW6EFSWFA')
+AWS_SECRET_ACCESS_KEY = os.getenv('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')
 AWS_STORAGE_BUCKET_NAME = 'marketplacemediauploads'
 AWS_S3_REGION_NAME = 'us-east-2'
 
