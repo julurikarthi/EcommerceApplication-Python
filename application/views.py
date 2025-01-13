@@ -131,5 +131,5 @@ def downloadImage(request):
     
 def create_user(request):
     user_operations = UserOperations()
-    return user_operations.create_user(request)
+    return user_operations.create_user(request, getDatabase())
 

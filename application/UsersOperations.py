@@ -7,7 +7,7 @@ from .Database import Database
 
 class UserOperations:
     
-    def create_user(request):
+    def create_user(request, db):
         if request.method == 'POST':
                 try:
                     # Extract user data from request
@@ -16,8 +16,6 @@ class UserOperations:
                     email = data.get("email")
                     password = data.get("password")
                     mobile_number = data.get("mobileNumber")
-                    db_instance = Database()
-                    db = db_instance.getDatabase()
                     users_collection = db.users
     
                     # Validate required fields
