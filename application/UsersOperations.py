@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-import bcrypt
+# import bcrypt
 
 class UserOperations:
     
@@ -23,13 +23,13 @@ class UserOperations:
                     #     return JsonResponse({"error": "User with this email already exists."}, status=400)
 
                     # Hash the password
-                    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+                    # hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
                     # Create user document
                     user = {
                         "name": name,
                         "email": email,
-                        "password": hashed_password.decode('utf-8'),  # Store hashed password as string
+                        "password": "hashed_password.decode('utf-8')",  # Store hashed password as string
                         "mobileNumber": mobile_number,
                     }
 

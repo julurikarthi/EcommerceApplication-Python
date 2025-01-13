@@ -131,21 +131,7 @@ def downloadImage(request):
     
 @csrf_exempt
 def create_user(request):
-     if request.method == 'POST':
-        try:
-            # Initialize database and user operations
-            db = getDatabase()
-            user_operations = UserOperations()
-            
-            # Call the method to create the user
-            response = user_operations.create_user(request, db)
-            
-            # Ensure the response is returned (this could be a success message or data)
-            return JsonResponse(response, status=200)
-        
-        except Exception as e:
-            # Return a JSON response with error message if something goes wrong
-            return JsonResponse({"error": str(e)}, status=400)
-        else:
-            return JsonResponse({"error": "Invalid request method. Use POST."}, status=405)
+    db = getDatabase()
+    user_operations = UserOperations()
+    user_operations.create_user(request, db) 
 
