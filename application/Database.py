@@ -10,8 +10,6 @@ class Database:
             connection_string (str): The MongoDB connection string.
             database_name (str): The name of the database to use.
         """
-        self.client = None
-        self.db = None
 
     def connect(self):
         """

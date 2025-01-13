@@ -6,9 +6,6 @@ from pymongo.errors import ConnectionFailure
 from .Database import Database
 
 class UserOperations:
-    db_instance = Database()
-    db = db_instance.connect()
-    users_collection = db_instance['users']
     
     def create_user(request):
         if request.method == 'POST':
@@ -19,7 +16,10 @@ class UserOperations:
                     email = data.get("email")
                     password = data.get("password")
                     mobile_number = data.get("mobileNumber")
-
+                    db_instance = Database()
+                    db = db_instance.connect()
+                    users_collection = db_instance.users
+    
                     # Validate required fields
                     if not all([name, email, password, mobile_number]):
                         return JsonResponse({"error": "All fields are required."}, status=400)
