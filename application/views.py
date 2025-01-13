@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, Http404
 from django.http import HttpResponseRedirect
+from UsersOperations import UserOperations
 
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
@@ -126,4 +127,8 @@ def downloadImage(request):
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method. Use GET."}, status=405)
+    
+def create_user(request):
+    user_operations = UserOperations()
+    return user_operations.create_user(request)
 
