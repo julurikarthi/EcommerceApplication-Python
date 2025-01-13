@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, Http404
 from django.http import HttpResponseRedirect
-from .UsersOperations import UserOperations
+# from .UsersOperations import UserOperations
 
 
 
