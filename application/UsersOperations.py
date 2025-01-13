@@ -8,7 +8,7 @@ from .Database import Database
 class UserOperations:
     db_instance = Database()
     db = db_instance.connect()
-    users_collection = db_instance.get_collection("users")
+    users_collection = db_instance['users']
     
     def create_user(request):
         if request.method == 'POST':
