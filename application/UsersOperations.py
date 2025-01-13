@@ -1,13 +1,9 @@
 from django.http import JsonResponse
-from pymongo import MongoClient
 import bcrypt
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
-from .Database import Database
 
 class UserOperations:
     
-    def create_user(request, db):
+    def create_user(self,request, db):
         if request.method == 'POST':
                 try:
                     # Extract user data from request
@@ -16,7 +12,7 @@ class UserOperations:
                     email = data.get("email")
                     password = data.get("password")
                     mobile_number = data.get("mobileNumber")
-                    users_collection = db.users
+                    users_collection = db['users']
     
                     # Validate required fields
                     if not all([name, email, password, mobile_number]):

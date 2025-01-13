@@ -129,7 +129,9 @@ def downloadImage(request):
     else:
         return JsonResponse({"error": "Invalid request method. Use GET."}, status=405)
     
+@csrf_exempt
 def create_user(request):
+    db = getDatabase()
     user_operations = UserOperations()
-    return user_operations.create_user(request, getDatabase())
+    return user_operations.create_user(request, db)
 
