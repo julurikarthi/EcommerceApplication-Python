@@ -17,8 +17,8 @@ class UserOperations:
                     password = data.get("password")
                     mobile_number = data.get("mobileNumber")
                     db_instance = Database()
-                    db = db_instance.connect()
-                    users_collection = db_instance.users
+                    db = db_instance.getDatabase()
+                    users_collection = db.users
     
                     # Validate required fields
                     if not all([name, email, password, mobile_number]):
