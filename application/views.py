@@ -7,6 +7,8 @@ import json
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.http import HttpResponse, Http404
+from django.http import HttpResponseRedirect
+
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -111,20 +113,17 @@ def downloadImage(request):
         try:
             # Get the file name from the query parameters
             file_name = request.GET.get('file_name')
-            
             if not file_name:
-                return JsonResponse({"error": "No file name provided."}, status=400)
-            
-            # Use default_storage to construct the file path
-            file_path = file_name  # Assuming the file name corresponds to the file path in S3
-            
-            # Get the URL for accessing the file
-            file_url = default_storage.url(file_path)
-            
-            # Return the file URL for downloading
-            return JsonResponse({"message": "File URL generated successfully.", "url": file_url}, status=200)
-        
+                return JsonResponse({"error": "File name is required."}, status=400)
+
+            # Generate the file URL
+            file_url = default_storage.url(file_name)
+
+            # Redirect to the pre-signed URL to render the image
+            return HttpResponseRedirect(file_url)
+
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     else:
         return JsonResponse({"error": "Invalid request method. Use GET."}, status=405)
+
