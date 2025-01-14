@@ -1,43 +1,44 @@
-from django.http import JsonResponse
-# import bcrypt
 
 class UserOperations:
     
-    def create_user(self,data):
-            try:
-              # Extract user data from request
-                        name = data.get("name")
-                        email = data.get("email")
-                        password = data.get("password")
-                        mobile_number = data.get("mobileNumber")
-                        # users_collection = db['users']
+    def create_user(self, data, db):
+        try:
+            name = data.get("name")
+            email = data.get("email")
+            password = data.get("password")
+            mobile_number = data.get("mobileNumber")
+            ueserType = data.get("ueserType")
+            users_collection = db['users']
         
-                        # Validate required fields
-                        if not all([name, email, password, mobile_number]):
-                            return JsonResponse({"error": "All fields are required."}, status=400)
+            # Validate required fields
+            if not all([name, email, password, mobile_number, ueserType]):
+                response = {"error": "All fields are required."}
+                print("Response to API:", response)  # Print the response
+                return response
 
-                        # Check if the user already exists
-                        # if users_collection.find_one({"email": email}):
-                        #     return JsonResponse({"error": "User with this email already exists."}, status=400)
+            # Check if the user already exists
+            if users_collection.find_one({"email": email}):
+                response = {"error": "User with this email already exists."}
+                print("Response to API:", response)  # Print the response
+                return response
 
-                        # Hash the password
-                        # hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+            # Create user document
+            user = {
+                "name": name,
+                "email": email,
+                "password": password,  # Store hashed password as string
+                "mobileNumber": mobile_number,
+                "ueserType": ueserType
+            }
 
-                        # Create user document
-                        user = {
-                            "name": name,
-                            "email": email,
-                            "password": "hashed_password.decode('utf-8')",  # Store hashed password as string
-                            "mobileNumber": mobile_number,
-                        }
+            # Insert into MongoDB
+            user_id = users_collection.insert_one(user)
 
-                        # Insert into MongoDB
-                        # users_collection.insert_one(user)
+            response = {"message": "User created successfully.", "user_id": str(user_id.inserted_id)}
+            print("Response to API:", response)  # Print the response
+            return response
 
-                        return JsonResponse({"message": "User created successfully."}, status=201)
-            except Exception as e:
-                        return JsonResponse({"error": str(e)}, status=500)
-     
-
-
-
+        except Exception as e:
+            response = {"error": str(e)}
+            print("Response to API:", response)  # Print the response
+            return response

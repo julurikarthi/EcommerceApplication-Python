@@ -1,7 +1,6 @@
 from pymongo import MongoClient
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
 from pymongo.errors import ConnectionFailure
 import json
 from django.conf import settings
@@ -9,12 +8,14 @@ from django.core.files.storage import default_storage
 from django.http import HttpResponse, Http404
 from django.http import HttpResponseRedirect
 from .UsersOperations import UserOperations
+from  .ProductOperations import ProductOperations
 from rest_framework.decorators import action
 
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
 
 from PIL import Image
 from io import BytesIO
@@ -43,20 +44,11 @@ class ProductViewSet(ViewSet):
             customer_id = data.get('customer_id')
             
             # Validate required fields
-            if not store_name or not store_type or not image_id:
-                return JsonResponse({"error": "Both 'store_name', 'store_type' and 'image_id' are required."}, status=400)
+            if not store_name or not store_type or not image_id or not customer_id:
+                return JsonResponse({"error": "Both 'store_name', 'store_type' and 'image_id' and 'customer_id' are required."}, status=400)
             
             # Optional field: address
             address = data.get('address', None)
-
-            # Assuming you have a Store model
-            store_data = {
-                "store_name": store_name,
-                "store_type": store_type,
-                "image_id": image_id,
-                "customer_id": customer_id,
-                "address": address,
-            }
             
             db = self.getDatabase()
             
@@ -175,3 +167,55 @@ class ProductViewSet(ViewSet):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    
+    @action(detail=False, methods=['post'])
+    def createUser(self, request):
+        """
+        Handles creating a new user in the database.
+        """
+        try:
+            # Parse request data
+            data = request.data
+
+            # Get the database connection
+            db = self.getDatabase()
+
+            # Create the user
+            userOperation = UserOperations()
+            response = userOperation.create_user(data=data, db=db)
+
+            # Return the response from the UserOperations method
+            return Response(response, status=response.get("status", 200))  # Use default 200 if status not provided
+
+        except ValidationError as e:
+            return Response({"error": e.detail}, status=400)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def createProduct(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            product_operations = ProductOperations()
+            return product_operations.create_product(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def updateProduct(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            product_operations = ProductOperations()
+            return product_operations.updateProduct(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+            
+        
+    
+
+
+
+        
