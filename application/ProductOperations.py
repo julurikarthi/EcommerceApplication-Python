@@ -11,7 +11,7 @@ class ProductOperations:
         """
         try:
             # Extract required fields from data
-            name = data.get("name")
+            name = data.get("product_name")
             description = data.get("description")
             price = data.get("price")
             stock = data.get("stock")
@@ -37,7 +37,7 @@ class ProductOperations:
             # Create product document
             products_collection = db['Products']
             product = {
-                "name": name,
+                "product_name": name,
                 "description": description,
                 "price": price,
                 "stock": stock,
@@ -100,31 +100,40 @@ class ProductOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+    
 
+    def getAllProducts(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
 
+            # Query to filter products by store_id if provided
+            query = {}
+            store_id = data["store_id"]
+            if store_id:
+                if not ObjectId.is_valid(store_id):
+                    return JsonResponse({"error": "Invalid store_id format."}, status=400)
+                query["store_id"] = store_id
+            # Fetch products from the database
+            products = list(db['Products'].find(query))
 
-        
+            # Format the products for JSON serialization
+            formatted_products = []
+            for product in products:
+                formatted_products.append({
+                    "product_id": str(product["_id"]),
+                    "store_id": str(product["store_id"]),
+                    "product_name": product.get("product_name"),
+                    "price": product.get("price"),
+                    "description": product.get("description", ""),
+                    "created_at": product.get("created_at", None),
+                    "updated_at": product.get("updated_at", None),
+                })
 
-            # # Check if the product exists
-            # product = db['Products'].find_one({"_id": ObjectId(product_id), "store_id": store_id})
-            # if not product:
-            #     return JsonResponse({"error": "Product not found for the given store."}, status=404)
+            # Return the list of products
+            return JsonResponse({"products": formatted_products}, status=200)
 
-            # # Prepare the updated product data
-            # updated_data = {}
-            # if product_name:
-            #     updated_data["product_name"] = product_name
-            # if price:
-            #     updated_data["price"] = price
-            # if description:
-            #     updated_data["description"] = description
-
-            # # Update the product in the 'Products' collection
-            # result = db['Products'].update_one({"_id": ObjectId(product_id)}, {"$set": updated_data})
-
-            # if result.modified_count == 0:
-            #     return JsonResponse({"error": "No changes made to the product."}, status=400)
-
-            # return JsonResponse({"message": "Product updated successfully!"}, status=200)
-
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
 
