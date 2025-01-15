@@ -111,7 +111,22 @@ class UserOperations:
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
-            result = db['Carts'].insert_one(cart_data)
+
+            existing_cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
+            if existing_cart:
+                    updated_products = existing_cart.get("products", []) + processed_products
+                    db['Carts'].update_one(
+                        {"_id": existing_cart["_id"]},
+                        {
+                            "$set": {
+                                "products": processed_products,
+                                "updated_at": datetime.utcnow()
+                            }
+                        }
+                    )
+                    return JsonResponse({"message": "Cart updated successfully.", "products": updated_products}, status=200)
+            else:
+                result = db['Carts'].insert_one(cart_data)
 
             return JsonResponse({
                 "message": "Cart created successfully.",
@@ -153,4 +168,96 @@ class UserOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def updateCart(self, data, db):
+            try:
+                customer_id = data.get("customer_id")
+                store_id = data.get("store_id")
+                product = data.get("products")  # List of products with details like product_id, quantity, etc.
+
+                # Validate required fields
+                if not all([customer_id, store_id, product]):
+                    return JsonResponse({"error": "customer_id, store_id, and products are required."}, status=400)
+
+                # Validate customer_id and store_id
+                if not customer_id or not store_id:
+                    return JsonResponse({"error": "Invalid customer_id or store_id."}, status=400)
+                
+                product_id = product["product_id"]
+                products = db['Products'].find_one({"_id": ObjectId(product_id)})
+                if not products:
+                    return JsonResponse({"error": f"Product not found for ID: {product_id}"}, status=400)
+                quantity = product.get("quantity")
+                # Check stock availability
+                stock = products.get("stock", 0)
+                if stock < quantity:
+                    return JsonResponse({"error": f"Insufficient stock for product_id: {product_id}"}, status=400)
+
+                # Check if the cart exists
+                cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
+
+                if not cart:
+                    return JsonResponse({"error": "Cart not found for the given customer_id and store_id."}, status=404)
+
+                # Update the cart with new products
+                db['Carts'].update_one(
+                    {"_id": cart["_id"]},
+                    {"$set": {"products": product, "updated_at": datetime.now()}}
+                )
+
+                return JsonResponse({"message": "Cart updated successfully."}, status=200)
+
+            except Exception as e:
+                return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+            
+    def deleteCartProduct(self, data, db):
+        try:
+            customer_id = data.get("customer_id")
+            store_id = data.get("store_id")
+            product_id = data.get("product_id")
+
+            # Validate required fields
+            if not all([customer_id, store_id, product_id]):
+                return JsonResponse({"error": "customer_id, store_id, and product_id are required."}, status=400)
+
+            # Validate customer_id, store_id, and product_id
+            if not customer_id or not store_id or not product_id:
+                return JsonResponse({"error": "Invalid customer_id, store_id, or product_id."}, status=400)
+
+            # Check if the cart exists
+            cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
+
+            if not cart:
+                return JsonResponse({"error": "Cart not found for the given customer_id and store_id."}, status=404)
+
+            # Remove the product from the cart
+            updated_products = [product for product in cart["products"] if product["product_id"] != product_id]
+
+            db['Carts'].update_one(
+                {"_id": cart["_id"]},
+                {"$set": {"products": updated_products, "updated_at": datetime.now()}}
+            )
+
+            return JsonResponse({"message": "Product removed from cart successfully."}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def delete_all_carts(self, db):
+        try:
+            # Remove all documents from the 'Carts' collection
+            delete_result = db['Carts'].delete_many({})
+
+            # Return the number of deleted carts
+            return JsonResponse({
+                "message": f"All carts deleted successfully.",
+                "deleted_count": delete_result.deleted_count
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
 
