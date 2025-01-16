@@ -115,8 +115,14 @@ class ProductOperations:
                 if not ObjectId.is_valid(store_id):
                     return JsonResponse({"error": "Invalid store_id format."}, status=400)
                 query["store_id"] = store_id
-            # Fetch products from the database
-            products = list(db['Products'].find(query))
+               # Pagination logic
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
+            limit = 30
+            skip = (page - 1) * limit
+
+            # Fetch paginated products from the database
+            products = list(db['Products'].find(query).skip(skip).limit(limit))
+
 
             # Format the products for JSON serialization
             formatted_products = []

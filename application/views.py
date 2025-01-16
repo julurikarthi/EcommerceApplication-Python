@@ -21,7 +21,7 @@ from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
 import os
-
+from .OrderOperation import OrdersOperations
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -42,13 +42,16 @@ class ProductViewSet(ViewSet):
             store_type = data.get('store_type')
             image_id = data.get('image_id')
             customer_id = data.get('customer_id')
-            
+            tax_percentage = data.get('tax_percentage')
+            pincode = data.get('pincode')
+            serviceType = data.get('serviceType')
             # Validate required fields
-            if not store_name or not store_type or not image_id or not customer_id:
-                return JsonResponse({"error": "Both 'store_name', 'store_type' and 'image_id' and 'customer_id' are required."}, status=400)
+            if not store_name or not store_type or not image_id or not customer_id or not pincode or not tax_percentage or not serviceType: 
+                return JsonResponse({"error": "Both 'store_name', 'store_type' and 'image_id' and 'customer_id' and 'pincode' and 'serviceType' and 'tax_percentage' are required."}, status=400)
             
             # Optional field: address
             address = data.get('address', None)
+            
             
             db = self.getDatabase()
             
@@ -59,6 +62,9 @@ class ProductViewSet(ViewSet):
                 "image_id": image_id,
                 "customer_id": customer_id,
                 "address": address,
+                "pincode": pincode,
+                "tax_percentage": tax_percentage,
+                "sericeType": serviceType
             }
             collection = db['Stores']
             result = collection.insert_one(store_data)
@@ -254,13 +260,22 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
         
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['get'])
     def deleteCartItem(self, request):
+        try:
+            db = self.getDatabase()
+            user_operations = UserOperations()
+            return user_operations.delete_all_carts(db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def createOrder(self, request):
         try:
             data = request.data
             db = self.getDatabase()
-            user_operations = UserOperations()
-            return user_operations.deleteCartProduct(data=data, db=db)
+            order_operations = OrdersOperations()
+            return order_operations.createOrder(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
             

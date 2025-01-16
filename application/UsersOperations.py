@@ -114,17 +114,48 @@ class UserOperations:
 
             existing_cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
             if existing_cart:
-                    updated_products = existing_cart.get("products", []) + processed_products
-                    db['Carts'].update_one(
-                        {"_id": existing_cart["_id"]},
-                        {
-                            "$set": {
-                                "products": processed_products,
-                                "updated_at": datetime.utcnow()
-                            }
+                existing_products = existing_cart.get("products", [])
+                if not isinstance(existing_products, list):
+                    return JsonResponse({"error": "Invalid data format for products in the cart."}, status=500)
+
+                updated_products = []
+                for processed_product in processed_products:
+                    # Ensure processed_product is a dictionary
+                    print(processed_products)
+                    print(processed_product)
+                    if not isinstance(processed_product, dict):
+                        return JsonResponse({"error": "Invalid data format for processed products."}, status=400)
+
+                    product_found = False
+                    for existing_product in existing_products:
+                        print(existing_products)
+                        if not isinstance(existing_product, dict):
+                            return JsonResponse({"error": "Invalid data format for products in the cart."}, status=500)
+
+                        # Check if the product already exists in the cart
+                        if existing_product["product_id"] == processed_product["product_id"]:
+                            # Update the quantity
+                            existing_product["quantity"] += processed_product["quantity"]
+                            product_found = True
+                            break
+
+                    if not product_found:
+                        # Add the new product to the list
+                        existing_products.append(processed_product)
+
+                updated_products = existing_products
+
+                db['Carts'].update_one(
+                    {"_id": existing_cart["_id"]},
+                    {
+                        "$set": {
+                            "products": updated_products,
+                            "updated_at": datetime.utcnow()
                         }
-                    )
-                    return JsonResponse({"message": "Cart updated successfully.", "products": updated_products}, status=200)
+                    }
+                )
+
+                return JsonResponse({"message": "Cart updated successfully.", "products": updated_products}, status=200)
             else:
                 result = db['Carts'].insert_one(cart_data)
 
