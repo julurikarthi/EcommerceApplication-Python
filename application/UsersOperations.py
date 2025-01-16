@@ -90,6 +90,7 @@ class UserOperations:
                 if stock < quantity:
                     return JsonResponse({"error": f"Insufficient stock for product_id: {product_id}"}, status=400)
 
+
                 product_total_price = product.get("price", 0) * quantity
                 total_amount += product_total_price
 
@@ -189,7 +190,7 @@ class UserOperations:
             cart = db['Carts'].find_one({"customer_id": customer_id})
 
             if not cart:
-                return JsonResponse({"error": "Cart not found for the given customer_id."}, status=404)
+                return JsonResponse({"error": "Cart not found for the given customer_id."}, status=200)
 
             # Extract products and cart information
             products = cart.get("products", [])

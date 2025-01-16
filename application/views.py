@@ -278,6 +278,20 @@ class ProductViewSet(ViewSet):
             return order_operations.createOrder(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+        
+
+    @action(detail=False, methods=['post'])
+    def checkStock(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            order_operations = OrdersOperations()
+            return order_operations.checkStock(data=data,db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+
+    
             
             
         

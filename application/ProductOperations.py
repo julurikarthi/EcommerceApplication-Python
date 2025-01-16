@@ -62,6 +62,7 @@ class ProductOperations:
             store_id = data.get('store_id')
             product_name = data.get('product_name')
             price = data.get('price')
+            stock = data.get('stock')
             description = data.get('description', '')
 
             # Ensure the product_id and store_id are valid ObjectId types
@@ -88,6 +89,8 @@ class ProductOperations:
                 updated_data["price"] = price
             if description:
                 updated_data["description"] = description
+            if stock:
+                updated_data["stock"] = stock
 
             # Update the product in the 'Products' collection
             result = db['Products'].update_one({"_id": ObjectId(product_id)}, {"$set": updated_data})
@@ -96,7 +99,7 @@ class ProductOperations:
             if result.modified_count == 0:
                 return JsonResponse({"error": "No changes made to the product."}, status=400)
 
-            return JsonResponse({"message": "Product updated successfully!"}, status=200)
+            return JsonResponse({"message": "Product updated successfully! "}, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
