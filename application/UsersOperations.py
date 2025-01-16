@@ -72,6 +72,7 @@ class UserOperations:
 
             # Validate and process each product
             processed_products = []
+            total_amount = 0 
             for item in products:
                 product_id = item.get("product_id")
                 quantity = item.get("quantity", 1)
@@ -94,6 +95,8 @@ class UserOperations:
                     {"_id": ObjectId(product_id)},
                     {"$set": {"stock": stock - quantity}}
                 )
+                product_total_price = product.get("price", 0) * quantity
+                total_amount += product_total_price
 
                 # Add product to processed list
                 processed_products.append({
@@ -111,6 +114,10 @@ class UserOperations:
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }
+
+            tax_percentage = store.get("tax_percentage", 0)
+            tax_amount = (total_amount * tax_percentage) / 100
+            total_amount_with_tax = total_amount + tax_amount
 
             existing_cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
             if existing_cart:
@@ -155,12 +162,19 @@ class UserOperations:
                     }
                 )
 
-                return JsonResponse({"message": "Cart updated successfully.", "products": updated_products}, status=200)
+                return JsonResponse({"message": "Cart updated successfully.", 
+                                     "total_amount": round(total_amount, 2),
+                                    "tax_amount": round(tax_amount, 2),
+                                    "total_amount_with_tax": round(total_amount_with_tax, 2),
+                                    "products": updated_products}, status=200)
             else:
                 result = db['Carts'].insert_one(cart_data)
 
             return JsonResponse({
                 "message": "Cart created successfully.",
+                 "total_amount": round(total_amount, 2),
+                "tax_amount": round(tax_amount, 2),
+                "total_amount_with_tax": round(total_amount_with_tax, 2),
                 "cart_id": str(result.inserted_id),
                 "products": processed_products
             }, status=201)
