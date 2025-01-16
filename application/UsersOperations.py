@@ -90,11 +90,6 @@ class UserOperations:
                 if stock < quantity:
                     return JsonResponse({"error": f"Insufficient stock for product_id: {product_id}"}, status=400)
 
-                # Deduct stock
-                db['Products'].update_one(
-                    {"_id": ObjectId(product_id)},
-                    {"$set": {"stock": stock - quantity}}
-                )
                 product_total_price = product.get("price", 0) * quantity
                 total_amount += product_total_price
 
