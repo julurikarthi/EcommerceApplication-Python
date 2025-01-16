@@ -290,6 +290,39 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
         
+    
+    @action(detail=False, methods=['post'])
+    def updateOrderStatus(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            order_operations = OrdersOperations()
+            return order_operations.update_OrderStatus(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+
+    @action(detail=False, methods=['post'])
+    def getOrdersForStore(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            order_operations = OrdersOperations()
+            return order_operations.getOrders_ForStore(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    @action(detail=False, methods=['post'])
+    def getOrdersForCustomer(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            order_operations = OrdersOperations()
+            return order_operations.getOrders_ForCustomer(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+        
 
     
             
