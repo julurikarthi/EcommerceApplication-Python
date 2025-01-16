@@ -132,6 +132,7 @@ class ProductOperations:
                     "store_id": str(product["store_id"]),
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
+                    "stock": product.get("stock"),
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
                     "updated_at": product.get("updated_at", None),
