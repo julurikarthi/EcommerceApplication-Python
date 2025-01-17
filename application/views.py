@@ -208,6 +208,46 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
         
+    @action(detail=False, methods=['post'])
+    def createOffer(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.createOffer(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def getStoreOffers(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.getStoreOffers(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def getAllOffers(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.getAllOffers(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    @action(detail=False, methods=['post'])
+    def deleteOffer(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.deleteOffer(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
 
     @action(detail=False, methods=['post'])
     def getCart(self, request):

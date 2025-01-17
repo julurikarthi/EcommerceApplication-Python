@@ -231,3 +231,157 @@ class StoreOperation:
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+    def createOffer(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Extract required fields
+            offer_description = data.get("offerDescription")
+            store_id = data.get("store_id")
+            image_id = data.get("image_id")
+
+            # Validate inputs
+            if not all([offer_description, store_id, image_id]):
+                return JsonResponse({"error": "All fields ('offerDescription', 'store_id', 'image_id') are required."}, status=400)
+
+            if not ObjectId.is_valid(store_id):
+                return JsonResponse({"error": "Invalid store_id format."}, status=400)
+
+            # Validate store existence
+            store = db['Stores'].find_one({"_id": ObjectId(store_id)})
+            if not store:
+                return JsonResponse({"error": "Store not found."}, status=404)
+
+            # Create the offer document
+            offer_data = {
+                "store_id": store_id,
+                "offerDescription": offer_description,
+                "image_id": image_id,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+            }
+
+            # Insert into database
+            result = db['Offers'].insert_one(offer_data)
+
+            return JsonResponse({
+                "message": "Offer created successfully.",
+                "offer_id": str(result.inserted_id),
+                "store_id": store_id,
+                "offerDescription": offer_description,
+                "image_id": image_id
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+    
+    def getStoreOffers(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Query to filter offers by store_id if provided
+            query = {}
+            store_id = data.get("store_id")
+            if store_id:
+                if not ObjectId.is_valid(store_id):
+                    return JsonResponse({"error": "Invalid store_id format."}, status=400)
+                query["store_id"] = store_id
+
+            # Pagination logic
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
+            limit = 30
+            skip = (page - 1) * limit
+
+            # Fetch paginated offers from the database
+            offers = list(db['Offers'].find(query).skip(skip).limit(limit))
+
+            # Format the offers for JSON serialization
+            formatted_offers = []
+            for offer in offers:
+                formatted_offers.append({
+                    "offer_id": str(offer["_id"]),
+                    "store_id": str(offer["store_id"]),
+                    "offerDescription": offer.get("offerDescription"),
+                    "image_id": str(offer["image_id"]),
+                    "created_at": offer.get("created_at", None),
+                    "updated_at": offer.get("updated_at", None),
+                })
+
+            # Return the list of offers
+            return JsonResponse({"offers": formatted_offers}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def getAllOffers(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Pagination logic
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
+            limit = 30  # Default limit of 30 offers per page
+            skip = (page - 1) * limit
+
+            # Fetch paginated offers from the database
+            offers = list(db['Offers'].find().skip(skip).limit(limit))
+
+            # Format the offers for JSON serialization
+            formatted_offers = []
+            for offer in offers:
+                formatted_offers.append({
+                    "offer_id": str(offer["_id"]),
+                    "store_id": str(offer["store_id"]),
+                    "offerDescription": offer.get("offerDescription"),
+                    "image_id": str(offer["image_id"]),
+                    "created_at": offer.get("created_at", None),
+                    "updated_at": offer.get("updated_at", None),
+                })
+
+            # Return the list of offers
+            return JsonResponse({"offers": formatted_offers}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def deleteOffer(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Extract offer_id from the request data
+            offer_id = data.get("offer_id")
+            if not offer_id:
+                return JsonResponse({"error": "Offer ID is required."}, status=400)
+
+            # Validate the format of offer_id
+            if not ObjectId.is_valid(offer_id):
+                return JsonResponse({"error": "Invalid Offer ID format."}, status=400)
+
+            # Check if the offer exists
+            offer = db['Offers'].find_one({"_id": ObjectId(offer_id)})
+            if not offer:
+                return JsonResponse({"error": "Offer not found."}, status=404)
+
+            # Delete the offer
+            db['Offers'].delete_one({"_id": ObjectId(offer_id)})
+
+            # Return a success response
+            return JsonResponse({"message": "Offer deleted successfully."}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
+
+
