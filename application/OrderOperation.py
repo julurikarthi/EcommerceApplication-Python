@@ -2,8 +2,6 @@ from django.http import JsonResponse
 from datetime import datetime
 from bson import ObjectId 
 
-# order status upadte
-# amount refund
 
 class OrdersOperations:
 

@@ -186,30 +186,71 @@ class UserOperations:
             if not customer_id:
                 return JsonResponse({"error": "Invalid customer_id."}, status=400)
 
-            # Query the 'Carts' collection for the customer's cart
-            cart = db['Carts'].find_one({"customer_id": customer_id})
+            # Query the 'Carts' collection for all carts of the customer
+            carts = list(db['Carts'].find({"customer_id": customer_id}))
+            if not carts:
+                return JsonResponse({"error": "No carts found for the given customer_id."}, status=200)
 
+            # Extract cart details and enrich with store information
+            cart_list = []
+            for cart in carts:
+                store_id = cart["store_id"]
+
+                # Query the 'Stores' collection for store details
+                store = db['Stores'].find_one({"_id": ObjectId(store_id)})
+                store_name = store.get("store_name") if store else "Unknown Store"
+                store_image = store.get("image_id") if store else None
+
+                cart_list.append({
+                    "cart_id": str(cart["_id"]),
+                    "store_id": store_id,
+                    "store_name": store_name,
+                    "store_image": store_image,
+                    "products": cart.get("products", []),
+                    "created_at": cart.get("created_at"),
+                    "updated_at": cart.get("updated_at")
+                })
+
+            return JsonResponse({"carts": cart_list}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
+    
+    def getCartByStore(self, data, db):
+        try:
+            # Validate inputs
+            customer_id = data.get("customer_id")
+            store_id = data.get("store_id")
+
+            if not customer_id or not store_id:
+                return JsonResponse({"error": "Customer ID and Store ID are required."}, status=400)
+
+            # Query the 'Carts' collection for the specific cart
+            cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
             if not cart:
-                return JsonResponse({"error": "Cart not found for the given customer_id."}, status=200)
+                return JsonResponse({"error": "Cart not found for the given customer_id and store_id."}, status=200)
 
-            # Extract products and cart information
-            products = cart.get("products", [])
-            cart_id = str(cart["_id"])
-            store_id = str(cart["store_id"])
-            created_at = cart.get("created_at")
-            updated_at = cart.get("updated_at")
+            # Fetch store details
+            store = db['Stores'].find_one({"_id": ObjectId(store_id)})
+            store_name = store.get("store_name") if store else "Unknown Store"
+            store_image = store.get("image_id") if store else None
 
+            # Prepare response
             return JsonResponse({
-                "cart_id": cart_id,
+                "cart_id": str(cart["_id"]),
                 "store_id": store_id,
-                "products": products,
-                "created_at": created_at,
-                "updated_at": updated_at
+                "store_name": store_name,
+                "store_image": store_image,
+                "products": cart.get("products", []),
+                "created_at": cart.get("created_at"),
+                "updated_at": cart.get("updated_at")
             }, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
-        
+
 
     def updateCart(self, data, db):
             try:

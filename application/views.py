@@ -22,6 +22,7 @@ from io import BytesIO
 from django.core.files.base import ContentFile
 import os
 from .OrderOperation import OrdersOperations
+from .StoreOperation import StoreOperation
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -36,45 +37,32 @@ class ProductViewSet(ViewSet):
     def createStore(self, request):
         # Parsing the incoming data
         try:
-            data = request.data  # DRF automatically parses JSON data
-            
-            store_name = data.get('store_name')
-            store_type = data.get('store_type')
-            image_id = data.get('image_id')
-            customer_id = data.get('customer_id')
-            tax_percentage = data.get('tax_percentage')
-            pincode = data.get('pincode')
-            serviceType = data.get('serviceType')
-            # Validate required fields
-            if not store_name or not store_type or not image_id or not customer_id or not pincode or not tax_percentage or not serviceType: 
-                return JsonResponse({"error": "Both 'store_name', 'store_type' and 'image_id' and 'customer_id' and 'pincode' and 'serviceType' and 'tax_percentage' are required."}, status=400)
-            
-            # Optional field: address
-            address = data.get('address', None)
-            
-            
+            data = request.data
             db = self.getDatabase()
-            
-            # Insert the store data into the 'Stores' collection
-            store_data = {
-                "store_name": store_name,
-                "store_type": store_type,
-                "image_id": image_id,
-                "customer_id": customer_id,
-                "address": address,
-                "pincode": pincode,
-                "tax_percentage": tax_percentage,
-                "sericeType": serviceType
-            }
-            collection = db['Stores']
-            result = collection.insert_one(store_data)
-            
-            return JsonResponse({"message": "Store created successfully!", "store_id": str(result.inserted_id)}, status=201)
-
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON payload."}, status=400)
+            store_operations = StoreOperation()
+            return store_operations.create_Store(data=data, db=db)
         except Exception as e:
-            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['get'])
+    def storeDetails(self, request):
+        try:
+            store_operations = StoreOperation()
+            details = store_operations.storeDetails()
+            return Response(details)  # Use Response instead of JsonResponse
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def getstoreCategories(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.getCategoriesByStore(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
         
     @staticmethod
     def getDatabase():
@@ -96,9 +84,6 @@ class ProductViewSet(ViewSet):
         except ConnectionFailure as e:
             raise ConnectionFailure(f"Could not connect to MongoDB: {str(e)}")
         
-    def getStoreTypes():
-        storeType = ["Grocery", "Fashion", "Restaurants"]
-        return storeType
     
     @action(detail=False, methods=['post'], url_path='uploadImage')
     def uploadImage(self, request):
@@ -238,6 +223,16 @@ class ProductViewSet(ViewSet):
             return user_operations.create_Cart(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+    
+    @action(detail=False, methods=['post'])
+    def createCategory(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.createCategory(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
         
 
     @action(detail=False, methods=['post'])
@@ -247,6 +242,16 @@ class ProductViewSet(ViewSet):
             db = self.getDatabase()
             user_operations = UserOperations()
             return user_operations.getCartProducts(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
+    @action(detail=False, methods=['post'])
+    def getCartByStore(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            user_operations = UserOperations()
+            return user_operations.getCartByStore(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
         

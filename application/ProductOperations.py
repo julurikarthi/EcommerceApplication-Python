@@ -7,7 +7,7 @@ class ProductOperations:
 
     def create_product(self, data, db):
         """
-        Creates a new product in the database after validating the store_id.
+        Creates a new product in the database after validating the store_id and category_id.
         """
         try:
             # Extract required fields from data
@@ -16,10 +16,11 @@ class ProductOperations:
             price = data.get("price")
             stock = data.get("stock")
             store_id = data.get("store_id")
+            category_id = data.get("category_id")  # New field for category association
             
             # Validate required fields
-            if not all([name, description, price, stock, store_id]):
-                return JsonResponse({"error": "All fields (name, description, price, stock, store_id) are required."}, status=400)
+            if not all([name, description, price, stock, store_id, category_id]):
+                return JsonResponse({"error": "All fields (product_name, description, price, stock, store_id, category_id) are required."}, status=400)
             
             # Validate price and stock
             if not isinstance(price, (int, float)) or price <= 0:
@@ -29,30 +30,40 @@ class ProductOperations:
             
             # Check if the store_id exists in the Stores collection
             store = db['Stores'].find_one({"_id": ObjectId(store_id)})
-        
             if not store:
                 return JsonResponse({"error": "Invalid store_id. No store found with this ID."}, status=400)
             
+            # Check if the category_id exists in the Categories collection and belongs to the specified store
+            category = db['Categories'].find_one({"_id": ObjectId(category_id), "store_id": store_id})
+            if not category:
+                return JsonResponse({"error": "Invalid category_id. The category does not exist or does not belong to the specified store."}, status=400)
             
             # Create product document
-            products_collection = db['Products']
             product = {
                 "product_name": name,
                 "description": description,
                 "price": price,
                 "stock": stock,
                 "store_id": store_id,
-                "created_at": datetime.now(),
+                "category_id": category_id,
+                "created_at": datetime.utcnow(),
             }
             
             # Insert the product into the Products collection
-            result = products_collection.insert_one(product)
+            result = db['Products'].insert_one(product)
             
             # Return success response
-            return JsonResponse({"message": "Product created successfully.", "product_id": str(result.inserted_id)}, status=201)
+            return JsonResponse({
+                "message": "Product created successfully.",
+                "product_id": str(result.inserted_id),
+                "store_id": store_id,
+                "category_id": category_id,
+                "category_name": category.get("category_name")  # Include category name for confirmation
+            }, status=201)
+        
         except Exception as e:
             return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
-        
+   
 
 
     def updateProduct(self, data, db):
