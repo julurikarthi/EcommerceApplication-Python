@@ -16,7 +16,8 @@ class ProductOperations:
             price = data.get("price")
             stock = data.get("stock")
             store_id = data.get("store_id")
-            category_id = data.get("category_id")  # New field for category association
+            category_id = data.get("category_id")
+            isPublish = data.get("isPublish", True)  # New field for category association
             
             # Validate required fields
             if not all([name, description, price, stock, store_id, category_id]):
@@ -47,6 +48,7 @@ class ProductOperations:
                 "store_id": store_id,
                 "category_id": category_id,
                 "created_at": datetime.utcnow(),
+                "isPublish": isPublish
             }
             
             # Insert the product into the Products collection
@@ -75,7 +77,7 @@ class ProductOperations:
             price = data.get('price')
             stock = data.get('stock')
             description = data.get('description', '')
-
+            isPublish = data.get("isPublish", True)
             # Ensure the product_id and store_id are valid ObjectId types
             if not ObjectId.is_valid(store_id):
                 return JsonResponse({"error": "Invalid store_id format."}, status=400)
@@ -102,6 +104,8 @@ class ProductOperations:
                 updated_data["description"] = description
             if stock:
                 updated_data["stock"] = stock
+            if isPublish:
+                updated_data["isPublish"] = isPublish
 
             # Update the product in the 'Products' collection
             result = db['Products'].update_one({"_id": ObjectId(product_id)}, {"$set": updated_data})
@@ -157,5 +161,81 @@ class ProductOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def getAllPublishedProducts(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Query to filter products by store_id and isPublish
+            query = {"isPublish": True}  # Only fetch published products
+            store_id = data.get("store_id")
+            
+            if store_id:
+                if not ObjectId.is_valid(store_id):
+                    return JsonResponse({"error": "Invalid store_id format."}, status=400)
+                query["store_id"] = store_id
+
+            # Pagination logic
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
+            limit = 30
+            skip = (page - 1) * limit
+
+            # Fetch paginated products from the database
+            products = list(db['Products'].find(query).skip(skip).limit(limit))
+
+            # Format the products for JSON serialization
+            formatted_products = []
+            for product in products:
+                formatted_products.append({
+                    "product_id": str(product["_id"]),
+                    "store_id": str(product["store_id"]),
+                    "product_name": product.get("product_name"),
+                    "price": product.get("price"),
+                    "stock": product.get("stock"),
+                    "description": product.get("description", ""),
+                    "created_at": product.get("created_at", None),
+                    "updated_at": product.get("updated_at", None),
+                    "isPublish": product.get("isPublish", True)  # Ensure this is included
+                })
+
+            # Return the list of published products
+            return JsonResponse({"products": formatted_products}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def deleteProduct(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Extract product_id from data
+            product_id = data.get("product_id")
+            if not product_id:
+                return JsonResponse({"error": "Product ID is required."}, status=400)
+
+            # Validate the product_id format
+            if not ObjectId.is_valid(product_id):
+                return JsonResponse({"error": "Invalid product_id format."}, status=400)
+
+            # Attempt to delete the product
+            result = db['Products'].delete_one({"_id": ObjectId(product_id)})
+
+            # Check if the product was found and deleted
+            if result.deleted_count == 0:
+                return JsonResponse({"error": "Product not found."}, status=404)
+
+            # Return success message
+            return JsonResponse({"message": "Product deleted successfully."}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
 
 
