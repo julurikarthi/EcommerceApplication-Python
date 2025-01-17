@@ -301,39 +301,60 @@ class OrdersOperations:
 
 
     def getOrders_ForStore(self, data, db):
-                try:
-                    # Extract store ID
-                    store_id = data.get("store_id")
-                    
-                    # Validate input
-                    if not store_id:
-                        return JsonResponse({"error": "Store ID is required."}, status=400)
-                    
-                    # Fetch orders for the store
-                    orders = list(db['Orders'].find({"store_id": store_id}))
-                    if not orders:
-                        return JsonResponse({"message": "No orders found for this store."}, status=404)
-                    
-                    # Format response
-                    response = []
-                    for order in orders:
-                        response.append({
-                            "order_id": str(order["_id"]),
-                            "customer_id": order["customer_id"],
-                            "customer_name": order["customer_name"],
-                            "products": order["products"],
-                            "total_price": round(order["total_price"], 2),
-                            "tax_amount": round(order["tax_amount"], 2),
-                            "total_price_with_tax": round(order["total_price_with_tax"], 2),
-                            "status": order["status"],
-                            "payment_type": order["payment_type"],
-                            "created_at": order["created_at"].isoformat()
-                        })
-                    
-                    return JsonResponse({"success": True, "orders": response}, status=200)
-                
-                except Exception as e:
-                    return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        try:
+            # Extract store ID and page number
+            store_id = data.get("store_id")
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
+            limit = 20  # Limit results to 20 orders per page
+            skip = (page - 1) * limit
+
+            # Validate input
+            if not store_id:
+                return JsonResponse({"error": "Store ID is required."}, status=400)
+
+            # Fetch orders for the store with pagination
+            total_orders = db['Orders'].count_documents({"store_id": store_id})
+            orders = list(db['Orders'].find({"store_id": store_id}).skip(skip).limit(limit))
+
+            if not orders:
+                return JsonResponse({"message": "No orders found for this store."}, status=404)
+
+            # Format response
+            response = []
+            for order in orders:
+                # Fetch customer details
+                customer = db['users'].find_one({"_id": ObjectId(order["customer_id"])})
+                customer_name = customer.get("name") if customer else "Unknown"
+                customer_email = customer.get("email") if customer else "Unknown"
+                customer_phone = customer.get("mobileNumber") if customer else "Unknown"
+
+                response.append({
+                    "order_id": str(order["_id"]),
+                    "customer_id": order["customer_id"],
+                    "customer_name": customer_name,
+                    "customer_email": customer_email,
+                    "customer_phone": customer_phone,
+                    "products": order["products"],
+                    "total_price": round(order["total_price"], 2),
+                    "tax_amount": round(order["tax_amount"], 2),
+                    "total_price_with_tax": round(order["total_price_with_tax"], 2),
+                    "status": order["status"],
+                    "payment_type": order["payment_type"],
+                    "created_at": order["created_at"].isoformat()
+                })
+
+            return JsonResponse({
+                "success": True,
+                "orders": response,
+                "total_orders": total_orders,
+                "page": page,
+                "total_pages": (total_orders + limit - 1) // limit  # Calculate total pages
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
         
     
     def getOrders_ForCustomer(self, data, db):

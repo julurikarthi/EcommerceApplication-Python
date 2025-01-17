@@ -17,7 +17,7 @@ from django.http import JsonResponse
 
 class CategoryOperations:
 
-    def getCategoryProductByStore(self, data, db=None):
+   def getCategoryProductByStore(self, data, db=None):
         try:
             # Ensure the database connection is provided
             if db is None:
@@ -40,15 +40,15 @@ class CategoryOperations:
             if not categories:
                 return JsonResponse({"error": "No categories found for the store."}, status=404)
 
-            # For each category, fetch up to 15 products
+            # For each category, fetch up to 15 products where isPublish is True
             result = []
             for category in categories:
                 category_id = str(category["_id"])
                 category_name = category.get("category_name", "Unknown Category")
 
-                # Query products for the category
+                # Query products for the category where isPublish is True
                 products = list(db['Products']
-                                .find({"category_id": category_id})
+                                .find({"category_id": category_id, "isPublish": True})
                                 .limit(max_products_per_category))
 
                 # Format products for response
@@ -76,3 +76,4 @@ class CategoryOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+

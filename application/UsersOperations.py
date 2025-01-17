@@ -223,6 +223,7 @@ class UserOperations:
             # Validate inputs
             customer_id = data.get("customer_id")
             store_id = data.get("store_id")
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
 
             if not customer_id or not store_id:
                 return JsonResponse({"error": "Customer ID and Store ID are required."}, status=400)
@@ -237,19 +238,42 @@ class UserOperations:
             store_name = store.get("store_name") if store else "Unknown Store"
             store_image = store.get("image_id") if store else None
 
+            # Fetch customer details
+            customer = db['Customers'].find_one({"_id": ObjectId(customer_id)})
+            customer_name = customer.get("name") if customer else "Unknown Customer"
+            customer_email = customer.get("email") if customer else None
+            customer_phone = customer.get("mobile_number") if customer else None
+
+            # Pagination logic for products in the cart
+            products = cart.get("products", [])
+            limit = 20
+            start = (page - 1) * limit
+            end = start + limit
+            paginated_products = products[start:end]
+
             # Prepare response
             return JsonResponse({
                 "cart_id": str(cart["_id"]),
                 "store_id": store_id,
                 "store_name": store_name,
                 "store_image": store_image,
-                "products": cart.get("products", []),
+                "customer": {
+                    "customer_id": customer_id,
+                    "name": customer_name,
+                    "email": customer_email,
+                    "phone_number": customer_phone,
+                },
+                "products": paginated_products,
+                "total_products": len(products),
+                "page": page,
+                "total_pages": (len(products) + limit - 1) // limit,  # Calculate total pages
                 "created_at": cart.get("created_at"),
                 "updated_at": cart.get("updated_at")
             }, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
 
     def updateCart(self, data, db):
