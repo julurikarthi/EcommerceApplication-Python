@@ -16,7 +16,6 @@ from django.http import JsonResponse
 
 class StoreOperation:
 
-
     def getStoreTypes(self):
         storeType = ["Grocery", "Fashion", "Restaurants"]
         return storeType
@@ -45,11 +44,12 @@ class StoreOperation:
             customer_id = data.get('customer_id')
             tax_percentage = data.get('tax_percentage')
             pincode = data.get('pincode')
+            state = data.get("state")
             serviceType = data.get('serviceType', [])
 
             # Validate required fields
-            if not store_name or not store_type or not image_id or not customer_id or not pincode or not tax_percentage or not serviceType:
-                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'customer_id', 'pincode', 'serviceType', 'tax_percentage') are required."}, status=400)
+            if not store_name or not store_type or not image_id or not customer_id or not pincode or not tax_percentage or not serviceType or not state:
+                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'customer_id', 'pincode', 'serviceType', 'tax_percentage', 'state') are required."}, status=400)
 
             # Check if the user has storeOwner ueserType
             user = db['users'].find_one({"_id": ObjectId(customer_id)})
@@ -58,7 +58,7 @@ class StoreOperation:
             
             
             # Validate that store_type is one of the valid types
-            valid_store_types = self.getStore_Types()  # Call the getStoreTypes method
+            valid_store_types = self.getStoreTypes()  # Call the getStoreTypes method
             if store_type not in valid_store_types:
                 return JsonResponse({"error": f"Invalid store type. Valid types are: {', '.join(valid_store_types)}"}, status=400)
             print(data)
@@ -80,6 +80,7 @@ class StoreOperation:
                 "customer_id": customer_id,
                 "address": address,
                 "pincode": pincode,
+                "state": state,
                 "tax_percentage": tax_percentage,
                 "serviceType": serviceType
             }
@@ -381,6 +382,66 @@ class StoreOperation:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def getAllStores(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Extract pincode, state, and pagination details
+            pincode = data.get("pincode")
+            state = data.get("state")
+            page = int(data.get("page", 1))  # Default to page 1
+            limit = 20  # Number of stores per page
+            skip = (page - 1) * limit
+            
+            query = {}
+
+            # Step 1: Filter by pincode if provided
+            if pincode:
+                query["pincode"] = pincode
+                stores = list(db['Stores'].find(query).skip(skip).limit(limit))
+
+                # Step 2: If no stores for pincode, fallback to state
+                if not stores and state:
+                    query = {"state": state}
+                    stores = list(db['Stores'].find(query).skip(skip).limit(limit))
+            
+            # Step 3: If no stores for state, fallback to all stores
+            if not stores:
+                stores = list(db['Stores'].find().skip(skip).limit(limit))
+            
+            # Format the stores for JSON serialization
+            formatted_stores = []
+            for store in stores:
+                formatted_stores.append({
+                    "store_id": str(store["_id"]),
+                    "store_name": store.get("store_name"),
+                    "store_type": store.get("store_type"),
+                    "pincode": store.get("pincode"),
+                    "state": store.get("state"),
+                    "image_id": store.get("image_id"),
+                    "customer_id": store.get("customer_id"),
+                    "tax_percentage": store.get("tax_percentage"),
+                    "service_type": store.get("serviceType"),
+                    "address": store.get("address"),
+                    "created_at": store.get("created_at"),
+                    "updated_at": store.get("updated_at"),
+                })
+            # Return the list of stores
+            return JsonResponse({
+                "stores": formatted_stores,
+                "page": page,
+                "total_stores": len(formatted_stores)
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
+
 
 
 

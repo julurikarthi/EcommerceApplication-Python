@@ -23,6 +23,7 @@ from django.core.files.base import ContentFile
 import os
 from .OrderOperation import OrdersOperations
 from .StoreOperation import StoreOperation
+from .CategoryOperations import CategoryOperations
 
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
@@ -54,6 +55,16 @@ class ProductViewSet(ViewSet):
             return Response({"error": str(e)}, status=500)
         
     @action(detail=False, methods=['post'])
+    def getAllStores(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.getAllStores(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
     def getstoreCategories(self, request):
         try:
             data = request.data
@@ -63,7 +74,17 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
-        
+    @action(detail=False, methods=['post'])
+    def getCategoryProductByStore(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = CategoryOperations()
+            return store_operations.getCategoryProductByStore(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+    
+    
     @staticmethod
     def getDatabase():
         """
