@@ -226,9 +226,6 @@ class StoreOperation:
 
             # Save to storage
             file_path = default_storage.save(file_name, ContentFile(compressed_image_io.read()))
-
-            # Get the URL for accessing the uploaded file
-            file_url = default_storage.url(file_path)
             
             return Response({"message": "Image uploaded successfully.", "file_name": file_name}, status=status.HTTP_200_OK)
 
