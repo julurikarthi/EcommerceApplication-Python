@@ -171,10 +171,11 @@ class StoreOperation:
 
     def uploadImage(self, request):
         """
-        Custom action to handle image upload via POST request.
+        Custom action to handle image upload via POST request, compressing the image to a maximum of 3MB.
         """
         if 'image' not in request.FILES:
             return Response({"error": "No image file found in the request."}, status=status.HTTP_400_BAD_REQUEST)
+        
         try:
             # Get the uploaded image file
             image_file = request.FILES['image']
@@ -194,29 +195,42 @@ class StoreOperation:
             
             # Compress the image (convert to JPEG for better compression)
             compressed_image_io = BytesIO()
-            
-            # If the image is PNG, we will save it as PNG, else as JPEG
-            if image_file.name.lower().endswith(".png"):
-                image.save(compressed_image_io, format='PNG')  # Save as PNG if original format is PNG
-            else:
-                image.save(compressed_image_io, format='JPEG', quality=85)  # Convert to JPEG for other formats
+
+            # Check for original image size and compress to meet the 3MB limit
+            quality = 85  # Start with a quality of 85% for JPEG
+            while True:
+                # Save the image as JPEG and check the file size
+                image.save(compressed_image_io, format='JPEG', quality=quality)
+                compressed_image_io.seek(0)
+                
+                # Check the size of the compressed image
+                if compressed_image_io.getbuffer().nbytes <= 3 * 1024 * 1024:  # 3MB in bytes
+                    break
+                
+                # If the image is still too large, reduce quality by 5%
+                quality -= 5
+                if quality < 50:  # Prevent the quality from going too low
+                    break
 
             # Save the compressed image to Django's storage backend
             compressed_image_io.seek(0)  # Reset the IO pointer
 
-            # Clean the file name by removing spaces and special characters
-            clean_name = image_file.name.replace(" ", "_")  # Replace spaces with underscores
-            clean_name = "".join(c for c in clean_name if c.isalnum() or c in ['_', '.'])  # Allow only alphanumeric and _ . characters
+            # Generate a unique file name for the image
+            clean_name = image_file.name.replace(" ", "_")
+            clean_name = "".join(c for c in clean_name if c.isalnum() or c in ['_', '.'])
+            
+            # Use a unique identifier for the file name to ensure uniqueness
+            file_extension = "jpg"  # Ensure the extension is 'jpg' after compression
+            unique_id = str(uuid.uuid4())
+            file_name = f"{unique_id}_{clean_name}.{file_extension}"
 
-            # Generate a unique ID to ensure the filename is unique
-            unique_id = str(uuid.uuid4())  # Generate a unique UUID
-            file_extension = "png" if image_file.name.lower().endswith(".png") else "jpg"
-            file_name = f"{os.path.splitext(clean_name)[0]}_{unique_id}.{file_extension}"  # Add UUID to filename
+            # Save to storage
             file_path = default_storage.save(file_name, ContentFile(compressed_image_io.read()))
 
             # Get the URL for accessing the uploaded file
             file_url = default_storage.url(file_path)
-            # Return only the file name
-            return JsonResponse({"message": "Image uploaded successfully.", "file_name": file_name}, status=200)
+            
+            return Response({"message": "Image uploaded successfully.", "file_name": file_name}, status=status.HTTP_200_OK)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
