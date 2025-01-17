@@ -87,57 +87,11 @@ class ProductViewSet(ViewSet):
     
     @action(detail=False, methods=['post'], url_path='uploadImage')
     def uploadImage(self, request):
-        """
-        Custom action to handle image upload via POST request.
-        """
-        if 'image' not in request.FILES:
-            return Response({"error": "No image file found in the request."}, status=status.HTTP_400_BAD_REQUEST)
         try:
-         # Get the uploaded image file
-            image_file = request.FILES['image']
-            
-            # Get the uploaded image file
-            image_file = request.FILES['image']
-            
-            # Open the image using Pillow
-            image = Image.open(image_file)
-            
-            # Check if the image is not already in RGB mode (PNG images are typically in RGBA)
-            if image.mode in ("RGBA", "P"):  # If the image has an alpha channel or palette
-                image = image.convert("RGB")  # Convert to RGB for saving as JPEG
-            
-            # Resize the image (e.g., max width of 800px while maintaining aspect ratio)
-            max_width = 800
-            if image.width > max_width:
-                new_height = int((max_width / image.width) * image.height)
-                image = image.resize((max_width, new_height), Image.ANTIALIAS)
-            
-            # Compress the image (convert to JPEG for better compression)
-            compressed_image_io = BytesIO()
-            
-            # If the image is PNG, we will save it as PNG, else as JPEG
-            if image_file.name.lower().endswith(".png"):
-                image.save(compressed_image_io, format='PNG')  # Save as PNG if original format is PNG
-            else:
-                image.save(compressed_image_io, format='JPEG', quality=85)  # Convert to JPEG for other formats
-
-            # Save the compressed image to Django's storage backend
-            compressed_image_io.seek(0)  # Reset the IO pointer
-
-            # Clean the file name by removing spaces and special characters
-            clean_name = image_file.name.replace(" ", "_")  # Replace spaces with underscores
-            clean_name = "".join(c for c in clean_name if c.isalnum() or c in ['_', '.'])  # Allow only alphanumeric and _ . characters
-
-            file_extension = "png" if image_file.name.lower().endswith(".png") else "jpg"
-            file_name = f"{os.path.splitext(clean_name)[0]}_compressed.{file_extension}"  # Add suffix and extension
-            file_path = default_storage.save(file_name, ContentFile(compressed_image_io.read()))
-
-            # Get the URL for accessing the uploaded file
-            file_url = default_storage.url(file_path)
-            # Return only the file name
-            return JsonResponse({"message": "Image uploaded successfully.", "file_name": file_name}, status=200)
+            store_operations = StoreOperation()
+            return store_operations.uploadImage(request=request)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                return Response({"error": str(e)}, status=500)
         
     @action(detail=False, methods=['get'], url_path='downloadImage')
     def download_image(self, request):
