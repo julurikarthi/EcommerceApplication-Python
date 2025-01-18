@@ -245,6 +245,19 @@ class ProductViewSet(ViewSet):
             return JsonResponse({"error": str(e)}, status=500)
         
     @action(detail=False, methods=['post'])
+    def createProduct(self, request):
+        try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
+            data = request.data
+            db = self.getDatabase()
+            product_operations = ProductOperations()
+            return product_operations.create_product(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
     def getAllProductbyStore(self, request):
         try:
             token_response = self.verify_token(request=request)
