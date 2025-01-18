@@ -1,6 +1,11 @@
 from django.http import JsonResponse
 from datetime import datetime
 from bson import ObjectId 
+import jwt
+from datetime import datetime, timedelta
+from django.conf import settings
+
+secret_key = settings.SECRET_KEY
 
 class UserOperations:
     
@@ -223,7 +228,6 @@ class UserOperations:
             # Validate inputs
             customer_id = data.get("customer_id")
             store_id = data.get("store_id")
-            page = int(data.get("page", 1))  # Default to page 1 if not provided
 
             if not customer_id or not store_id:
                 return JsonResponse({"error": "Customer ID and Store ID are required."}, status=400)
@@ -238,42 +242,19 @@ class UserOperations:
             store_name = store.get("store_name") if store else "Unknown Store"
             store_image = store.get("image_id") if store else None
 
-            # Fetch customer details
-            customer = db['Customers'].find_one({"_id": ObjectId(customer_id)})
-            customer_name = customer.get("name") if customer else "Unknown Customer"
-            customer_email = customer.get("email") if customer else None
-            customer_phone = customer.get("mobile_number") if customer else None
-
-            # Pagination logic for products in the cart
-            products = cart.get("products", [])
-            limit = 20
-            start = (page - 1) * limit
-            end = start + limit
-            paginated_products = products[start:end]
-
             # Prepare response
             return JsonResponse({
                 "cart_id": str(cart["_id"]),
                 "store_id": store_id,
                 "store_name": store_name,
                 "store_image": store_image,
-                "customer": {
-                    "customer_id": customer_id,
-                    "name": customer_name,
-                    "email": customer_email,
-                    "phone_number": customer_phone,
-                },
-                "products": paginated_products,
-                "total_products": len(products),
-                "page": page,
-                "total_pages": (len(products) + limit - 1) // limit,  # Calculate total pages
+                "products": cart.get("products", []),
                 "created_at": cart.get("created_at"),
                 "updated_at": cart.get("updated_at")
             }, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
-
 
 
     def updateCart(self, data, db):
@@ -364,6 +345,67 @@ class UserOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def login_user(self, data, db):
+        try:
+            # Validate input
+            email = data.get("email")
+            password = data.get("password")
+            user_type = data.get("userType")  # Fetch userType from request
+
+            if not email or not password or not user_type:
+                return JsonResponse({"error": "Email, password, and userType are required."}, status=400)
+
+            # Validate userType
+            if user_type not in ["customer", "storeOwner"]:
+                return JsonResponse({"error": "Invalid userType. Must be 'customer' or 'storeOwner'."}, status=400)
+
+            # Fetch the user from the database
+            user = db['users'].find_one({"email": email, "ueserType": user_type})
+            if not user:
+                return JsonResponse({"error": "Invalid email or userType."}, status=404)
+
+            # Check the password
+            #check_password_hash(user["password"], password) TODO
+            if not (user["password"], password):
+                return JsonResponse({"error": "Invalid password."}, status=401)
+
+            # Generate JWT token
+            token = jwt.encode({
+                "user_id": str(user["_id"]),
+                "email": user["email"],
+                "userType": user["ueserType"],
+                "exp": datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
+            }, secret_key, algorithm="HS256")
+
+            # Prepare and return the response
+            return JsonResponse({
+                "message": "Login successful.",
+                "token": token,
+                "user": {
+                    "user_id": str(user["_id"]),
+                    "name": user["name"],
+                    "email": user["email"],
+                    "userType": user["ueserType"],
+                    "mobileNumber": user["mobileNumber"]
+                }
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def verify_token(token):
+        try:
+            decoded_payload = jwt.decode(token, secret_key, algorithms=["HS256"])
+            return decoded_payload  # Contains user_id and other details
+        except jwt.ExpiredSignatureError:
+            return {"error": "Token has expired"}
+        except jwt.InvalidTokenError:
+            return {"error": "Invalid token"}
+
+
 
 
 

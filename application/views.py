@@ -25,6 +25,12 @@ from .OrderOperation import OrdersOperations
 from .StoreOperation import StoreOperation
 from .CategoryOperations import CategoryOperations
 
+import jwt
+from datetime import datetime, timedelta
+from django.conf import settings
+
+secret_key = settings.SECRET_KEY
+
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
 class ProductViewSet(ViewSet):
@@ -38,6 +44,9 @@ class ProductViewSet(ViewSet):
     def createStore(self, request):
         # Parsing the incoming data
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -83,7 +92,48 @@ class ProductViewSet(ViewSet):
             return store_operations.getCategoryProductByStore(data=data, db=db)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
     
+    @action(detail=False, methods=['post'])
+    def login(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = UserOperations()
+            return store_operations.login_user(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+    
+
+    def verify_token(self, request):
+        try:
+            # Extract token from the Authorization header
+            token = request.headers.get('Authorization')
+            if not token:
+                return JsonResponse({"error": "Token is required"}, status=400)
+
+            # Extract the token part (after "Bearer")
+            token = token.split(' ')[1]
+
+            # Decode the token (this step validates the token and extracts the payload)
+            decoded_data = jwt.decode(token, secret_key, algorithms=["HS256"])
+            user_id = decoded_data.get("user_id")  # Assuming user_id is stored in the token
+
+            # Check if the user type is valid (can be 'storeOwner' or 'customer' or other roles)
+            user_type = decoded_data.get("userType")
+            if user_type not in ["storeOwner", "customer"]:
+                return JsonResponse({"error": "Unauthorized: Invalid user type."}, status=403)
+
+            # If everything is valid, return the decoded data (or just user_id, depending on needs)
+            return decoded_data
+
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({"error": "Token has expired"}, status=401)
+        except jwt.InvalidTokenError:
+            return JsonResponse({"error": "Invalid token"}, status=401)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
     
     @staticmethod
     def getDatabase():
