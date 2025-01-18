@@ -376,7 +376,7 @@ class UserOperations:
                 "user_id": str(user["_id"]),
                 "email": user["email"],
                 "userType": user["ueserType"],
-                "exp": datetime.utcnow() + timedelta(hours=24)  # Token valid for 24 hours
+                "exp": datetime.utcnow() + timedelta(hours=36)  # Token valid for 24 hours
             }, secret_key, algorithm="HS256")
 
             # Prepare and return the response

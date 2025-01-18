@@ -57,6 +57,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['get'])
     def storeDetails(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             store_operations = StoreOperation()
             details = store_operations.storeDetails()
             return Response(details)  # Use Response instead of JsonResponse
@@ -66,6 +69,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getAllStores(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -76,6 +82,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getstoreCategories(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -86,6 +95,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getCategoryProductByStore(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = CategoryOperations()
@@ -212,6 +224,12 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def createProduct(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             product_operations = ProductOperations()
@@ -222,6 +240,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def updateProduct(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             product_operations = ProductOperations()
@@ -232,6 +253,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getAllProductbyStore(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             product_operations = ProductOperations()
@@ -242,6 +266,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def deleteProduct(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             product_operations = ProductOperations()
@@ -252,6 +279,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getAllPublishedProducts(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             product_operations = ProductOperations()
@@ -262,6 +292,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def createCart(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             user_operations = UserOperations()
@@ -272,6 +305,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def createCategory(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -282,6 +318,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def createOffer(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -292,6 +331,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getStoreOffers(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -302,6 +344,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getAllOffers(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -312,6 +357,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def deleteOffer(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
@@ -323,6 +371,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getCart(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             user_operations = UserOperations()
@@ -333,6 +384,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getCartByStore(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             user_operations = UserOperations()
@@ -343,6 +397,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def updateCart(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             user_operations = UserOperations()
@@ -353,6 +410,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['get'])
     def deleteCartItem(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             db = self.getDatabase()
             user_operations = UserOperations()
             return user_operations.delete_all_carts(db=db)
@@ -362,6 +422,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def createOrder(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             order_operations = OrdersOperations()
@@ -373,6 +436,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def checkStock(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             order_operations = OrdersOperations()
@@ -384,6 +450,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def updateOrderStatus(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             order_operations = OrdersOperations()
@@ -395,6 +464,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getOrdersForStore(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             order_operations = OrdersOperations()
@@ -405,6 +477,9 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getOrdersForCustomer(self, request):
         try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
             data = request.data
             db = self.getDatabase()
             order_operations = OrdersOperations()
