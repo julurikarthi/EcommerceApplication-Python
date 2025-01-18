@@ -15,13 +15,11 @@ class UserOperations:
             email = data.get("email")
             password = data.get("password")
             mobile_number = data.get("mobileNumber")
-            ueserType = data.get("ueserType")
+            userType = data.get("userType")
             users_collection = db['users']
-        
             # Validate required fields
-            if not all([name, email, password, mobile_number, ueserType]):
-                response = {"error": "All fields are required."}
-                print("Response to API:", response)  # Print the response
+            if not all([name, email, password, mobile_number, userType]):
+                response = {"error": "All fields are required. 'name', 'email', 'password', 'mobile_number', 'userType'"}
                 return response
 
             # Check if the user already exists
@@ -36,9 +34,8 @@ class UserOperations:
                 "email": email,
                 "password": password,  # Store hashed password as string
                 "mobileNumber": mobile_number,
-                "ueserType": ueserType
+                "userType": userType
             }
-
             # Insert into MongoDB
             user_id = users_collection.insert_one(user)
 
@@ -362,7 +359,7 @@ class UserOperations:
                 return JsonResponse({"error": "Invalid userType. Must be 'customer' or 'storeOwner'."}, status=400)
 
             # Fetch the user from the database
-            user = db['users'].find_one({"email": email, "ueserType": user_type})
+            user = db['users'].find_one({"email": email, "userType": user_type})
             if not user:
                 return JsonResponse({"error": "Invalid email or userType."}, status=404)
 
@@ -370,12 +367,19 @@ class UserOperations:
             #check_password_hash(user["password"], password) TODO
             if not (user["password"], password):
                 return JsonResponse({"error": "Invalid password."}, status=401)
+            store_id = None
+
+            store = db['Stores'].find_one({"user_id": str(user["_id"])})
+            print("Store found:", store)  # Debug line to check if store exists
+            if store:
+                store_id = str(store["_id"])
+
 
             # Generate JWT token
             token = jwt.encode({
                 "user_id": str(user["_id"]),
                 "email": user["email"],
-                "userType": user["ueserType"],
+                "userType": user["userType"],
                 "exp": datetime.utcnow() + timedelta(hours=36)  # Token valid for 24 hours
             }, secret_key, algorithm="HS256")
 
@@ -387,8 +391,9 @@ class UserOperations:
                     "user_id": str(user["_id"]),
                     "name": user["name"],
                     "email": user["email"],
-                    "userType": user["ueserType"],
-                    "mobileNumber": user["mobileNumber"]
+                    "userType": user["userType"],
+                    "mobileNumber": user["mobileNumber"],
+                    "store_id": store_id
                 }
             }, status=200)
 

@@ -38,24 +38,30 @@ class StoreOperation:
 
     def create_Store(self, data, db):
         try: 
+            print(data)
             store_name = data.get('store_name')
             store_type = data.get('store_type')
             image_id = data.get('image_id')
-            customer_id = data.get('customer_id')
+            user_id = data.get('user_id')
             tax_percentage = data.get('tax_percentage')
             pincode = data.get('pincode')
             state = data.get("state")
             serviceType = data.get('serviceType', [])
 
             # Validate required fields
-            if not store_name or not store_type or not image_id or not customer_id or not pincode or not tax_percentage or not serviceType or not state:
-                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'customer_id', 'pincode', 'serviceType', 'tax_percentage', 'state') are required."}, status=400)
+            if not store_name or not store_type or not image_id or not user_id or not pincode or not tax_percentage or not serviceType or not state:
+                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'user_id', 'pincode', 'serviceType', 'tax_percentage', 'state') are required."}, status=400)
 
-            # Check if the user has storeOwner ueserType
-            user = db['users'].find_one({"_id": ObjectId(customer_id)})
-            if not user or user.get('ueserType') != 'storeOwner':
-                return JsonResponse({"error": "User must have 'storeOwner' ueserType to create a store."}, status=400)      
-            
+            # Check if the user has storeOwner userType
+            user = db['users'].find_one({"_id": ObjectId(user_id)})
+            print(user)
+            if not user or user.get('userType') != 'storeOwner':
+                return JsonResponse({"error": "User must have 'storeOwner' userType to create a store."}, status=400)      
+
+            # Ensure the user does not already have a store
+            existing_store = db['Stores'].find_one({"user_id": user_id})
+            if existing_store:
+                return JsonResponse({"error": "User already has an existing store. One user can only have one store."}, status=400)
             
             # Validate that store_type is one of the valid types
             valid_store_types = self.getStoreTypes()  # Call the getStoreTypes method
@@ -69,6 +75,7 @@ class StoreOperation:
             for st in serviceType:
                 if st not in valid_service_types:
                     return JsonResponse({"error": f"Invalid service type '{st}'. Valid types are: {', '.join(valid_service_types)}"}, status=400)
+            
             # Optional field: address
             address = data.get('address', None)
             
@@ -77,7 +84,7 @@ class StoreOperation:
                 "store_name": store_name,
                 "store_type": store_type,
                 "image_id": image_id,
-                "customer_id": customer_id,
+                "user_id": user_id,
                 "address": address,
                 "pincode": pincode,
                 "state": state,
@@ -94,6 +101,7 @@ class StoreOperation:
             return JsonResponse({"error": "Invalid JSON payload."}, status=400)
         except Exception as e:
             return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+
 
 
     def createCategory(self, data, db):
