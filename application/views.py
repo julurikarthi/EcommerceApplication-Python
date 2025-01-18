@@ -116,6 +116,9 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
     
+    @action(detail=False, methods=['get'])
+    def test(self, request):
+        return Response({"status": "testing"}, status=200)
 
     def verify_token(self, request):
         try:
