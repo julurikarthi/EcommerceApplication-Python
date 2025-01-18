@@ -361,6 +361,45 @@ class StoreOperation:
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
         
+    
+    def getOffersByStore(self, data, db=None):
+        try:
+            # Ensure the database connection is provided
+            if db is None:
+                raise ValueError("Database connection is required.")
+
+            # Get the store_id from the request data
+            store_id = data.get("store_id")
+            if not store_id:
+                return JsonResponse({"error": "store_id is required."}, status=400)
+
+            # Pagination logic
+            page = int(data.get("page", 1))  # Default to page 1 if not provided
+            limit = 30  # Default limit of 30 offers per page
+            skip = (page - 1) * limit
+
+            # Fetch paginated offers from the database filtered by store_id
+            offers = list(db['Offers'].find({"store_id": store_id}).skip(skip).limit(limit))
+
+            # Format the offers for JSON serialization
+            formatted_offers = []
+            for offer in offers:
+                formatted_offers.append({
+                    "offer_id": str(offer["_id"]),
+                    "store_id": str(offer["store_id"]),
+                    "offerDescription": offer.get("offerDescription"),
+                    "image_id": str(offer["image_id"]),
+                    "created_at": offer.get("created_at", None),
+                    "updated_at": offer.get("updated_at", None),
+                })
+
+            # Return the list of offers
+            return JsonResponse({"offers": formatted_offers}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+        
 
     def deleteOffer(self, data, db=None):
         try:

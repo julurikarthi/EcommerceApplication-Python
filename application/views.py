@@ -334,6 +334,21 @@ class ProductViewSet(ViewSet):
             return store_operations.createOffer(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+    
+   
+    @action(detail=False, methods=['post'])
+    def getOffersByStore(self, request):
+        try:
+            token_response = self.verify_token(request=request)
+            if isinstance(token_response, JsonResponse):
+                return token_response
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.getOffersByStore(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
         
     @action(detail=False, methods=['post'])
     def getStoreOffers(self, request):
