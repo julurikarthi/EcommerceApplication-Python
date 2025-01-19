@@ -15,13 +15,14 @@ class ProductOperations:
             description = data.get("description")
             price = data.get("price")
             stock = data.get("stock")
+            imageIds = data.get("imageids",[])
             store_id = data.get("store_id")
             category_id = data.get("category_id")
             isPublish = data.get("isPublish", True)  # New field for category association
             
             # Validate required fields
-            if not all([name, description, price, stock, store_id, category_id]):
-                return JsonResponse({"error": "All fields (product_name, description, price, stock, store_id, category_id) are required."}, status=400)
+            if not all([name, description, price, stock, store_id, category_id, imageIds]):
+                return JsonResponse({"error": "All fields (product_name, description, price, stock, store_id, category_id, imageIds) are required."}, status=400)
             
             # Validate price and stock
             if not isinstance(price, (int, float)) or price <= 0:
@@ -48,6 +49,7 @@ class ProductOperations:
                 "store_id": store_id,
                 "category_id": category_id,
                 "created_at": datetime.utcnow(),
+                "imageIds": imageIds,
                 "isPublish": isPublish
             }
             
