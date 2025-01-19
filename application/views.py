@@ -57,9 +57,6 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['get'])
     def storeDetails(self, request):
         try:
-            token_response = self.verify_token(request=request)
-            if isinstance(token_response, JsonResponse):
-                return token_response
             store_operations = StoreOperation()
             details = store_operations.storeDetails()
             return Response(details)  # Use Response instead of JsonResponse
