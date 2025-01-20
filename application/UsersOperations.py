@@ -11,28 +11,22 @@ class UserOperations:
     
     def create_user(self, data, db):
         try:
-            name = data.get("name")
-            email = data.get("email")
-            password = data.get("password")
             mobile_number = data.get("mobileNumber")
             userType = data.get("userType")
             users_collection = db['users']
             # Validate required fields
-            if not all([name, email, password, mobile_number, userType]):
-                response = {"error": "All fields are required. 'name', 'email', 'password', 'mobile_number', 'userType'"}
+            if not all([mobile_number, userType]):
+                response = {"error": "All fields are required. 'mobile_number', 'userType'"}
                 return response
 
             # Check if the user already exists
-            if users_collection.find_one({"email": email}):
-                response = {"error": "User with this email already exists."}
+            if users_collection.find_one({"mobileNumber": mobile_number}):
+                response = {"error": "User with this Mobile number already exists."}
                 print("Response to API:", response)  # Print the response
                 return response
 
             # Create user document
             user = {
-                "name": name,
-                "email": email,
-                "password": password,  # Store hashed password as string
                 "mobileNumber": mobile_number,
                 "userType": userType
             }
@@ -347,26 +341,23 @@ class UserOperations:
     def login_user(self, data, db):
         try:
             # Validate input
-            email = data.get("email")
-            password = data.get("password")
+            mobileNumber = data.get("mobileNumber")
             user_type = data.get("userType")  # Fetch userType from request
 
-            if not email or not password or not user_type:
-                return JsonResponse({"error": "Email, password, and userType are required."}, status=400)
+            if not mobileNumber or not user_type:
+                return JsonResponse({"error": "mobileNumber, and userType are required."}, status=400)
 
             # Validate userType
             if user_type not in ["customer", "storeOwner"]:
                 return JsonResponse({"error": "Invalid userType. Must be 'customer' or 'storeOwner'."}, status=400)
 
             # Fetch the user from the database
-            user = db['users'].find_one({"email": email, "userType": user_type})
+            user = db['users'].find_one({"mobileNumber": mobileNumber, "userType": user_type})
             if not user:
                 return JsonResponse({"error": "Invalid email or userType."}, status=404)
 
             # Check the password
             #check_password_hash(user["password"], password) TODO
-            if not (user["password"], password):
-                return JsonResponse({"error": "Invalid password."}, status=401)
             store_id = None
 
             store = db['Stores'].find_one({"user_id": str(user["_id"])})
@@ -378,7 +369,7 @@ class UserOperations:
             # Generate JWT token
             token = jwt.encode({
                 "user_id": str(user["_id"]),
-                "email": user["email"],
+                "email": user["mobileNumber"],
                 "userType": user["userType"],
                 "exp": datetime.utcnow() + timedelta(hours=36)  # Token valid for 24 hours
             }, secret_key, algorithm="HS256")
@@ -389,8 +380,6 @@ class UserOperations:
                 "token": token,
                 "user": {
                     "user_id": str(user["_id"]),
-                    "name": user["name"],
-                    "email": user["email"],
                     "userType": user["userType"],
                     "mobileNumber": user["mobileNumber"],
                     "store_id": store_id
