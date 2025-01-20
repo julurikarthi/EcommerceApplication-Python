@@ -4,6 +4,7 @@ from bson import ObjectId
 import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
+from rest_framework.response import Response
 
 secret_key = settings.SECRET_KEY
 
@@ -354,7 +355,8 @@ class UserOperations:
             # Fetch the user from the database
             user = db['users'].find_one({"mobileNumber": mobileNumber, "userType": user_type})
             if not user:
-                return JsonResponse({"error": "Invalid email or userType."}, status=404)
+                responce = self.create_user(data=data, db=db)
+                return Response(responce, status=responce.get("status", 200))
 
             # Check the password
             #check_password_hash(user["password"], password) TODO
