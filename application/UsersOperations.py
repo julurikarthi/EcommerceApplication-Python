@@ -356,7 +356,9 @@ class UserOperations:
             user = db['users'].find_one({"mobileNumber": mobileNumber, "userType": user_type})
             if not user:
                 responce = self.create_user(data=data, db=db)
-                return Response(responce, status=responce.get("status", 200))
+                user = db['users'].find_one({"mobileNumber": mobileNumber, "userType": user_type})
+
+               
 
             # Check the password
             #check_password_hash(user["password"], password) TODO
