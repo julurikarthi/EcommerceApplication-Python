@@ -54,7 +54,7 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
         
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['post'])
     def storeDetails(self, request):
         try:
             store_operations = StoreOperation()
