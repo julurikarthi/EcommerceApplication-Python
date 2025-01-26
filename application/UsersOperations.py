@@ -363,11 +363,12 @@ class UserOperations:
             # Check the password
             #check_password_hash(user["password"], password) TODO
             store_id = None
-
+            store_type = None
             store = db['Stores'].find_one({"user_id": str(user["_id"])})
             print("Store found:", store)  # Debug line to check if store exists
             if store:
                 store_id = str(store["_id"])
+                store_type = store["store_type"]
 
 
             # Generate JWT token
@@ -386,7 +387,8 @@ class UserOperations:
                     "user_id": str(user["_id"]),
                     "userType": user["userType"],
                     "mobileNumber": user["mobileNumber"],
-                    "store_id": store_id
+                    "store_id": store_id,
+                    "store_type":store_type
                 }
             }, status=200)
 
