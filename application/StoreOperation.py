@@ -46,11 +46,12 @@ class StoreOperation:
             tax_percentage = data.get('tax_percentage')
             pincode = data.get('pincode')
             state = data.get("state")
+            currencycode = data.get("currencycode", None)
             serviceType = data.get('serviceType', [])
 
             # Validate required fields
-            if not store_name or not store_type or not image_id or not user_id or not pincode or not tax_percentage or not serviceType or not state:
-                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'user_id', 'pincode', 'serviceType', 'tax_percentage', 'state') are required."}, status=400)
+            if not store_name or not store_type or not image_id or not user_id or not pincode or not tax_percentage or not serviceType or not state or currencycode:
+                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'user_id', 'pincode', 'serviceType', 'tax_percentage', 'state', 'currencycode') are required."}, status=400)
 
             # Check if the user has storeOwner userType
             user = db['users'].find_one({"_id": ObjectId(user_id)})
@@ -89,7 +90,8 @@ class StoreOperation:
                 "pincode": pincode,
                 "state": state,
                 "tax_percentage": tax_percentage,
-                "serviceType": serviceType
+                "serviceType": serviceType,
+                "currencycode": currencycode
             }
             
             collection = db['Stores']
