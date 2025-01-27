@@ -374,7 +374,7 @@ class UserOperations:
             # Generate JWT token
             token = jwt.encode({
                 "user_id": str(user["_id"]),
-                "email": user["mobileNumber"],
+                "mobileNumber": user["mobileNumber"],
                 "userType": user["userType"],
                 "exp": datetime.utcnow() + timedelta(hours=36)  # Token valid for 24 hours
             }, secret_key, algorithm="HS256")
@@ -395,16 +395,58 @@ class UserOperations:
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
         
-
-    def verify_token(token):
+    def verify_token(self, request):
         try:
-            decoded_payload = jwt.decode(token, secret_key, algorithms=["HS256"])
-            return decoded_payload  # Contains user_id and other details
-        except jwt.ExpiredSignatureError:
-            return {"error": "Token has expired"}
-        except jwt.InvalidTokenError:
-            return {"error": "Invalid token"}
+            # Extract token from the Authorization header
+            token = request.headers.get('Authorization')
+            if not token:
+                return JsonResponse({"error": "Token is required"}, status=400)
 
+            # Extract the token part (after "Bearer")
+            token = token.split(' ')[1]
+            
+            # Decode the token (this step validates the token and extracts the payload)
+            decoded_data = jwt.decode(token, secret_key, algorithms=["HS256"])
+            user_id = decoded_data.get("user_id")  # Assuming user_id is stored in the token
+
+            # Check if the user type is valid (can be 'storeOwner' or 'customer' or other roles)
+           
+            user_type = decoded_data.get("userType")
+            if user_type not in ["storeOwner", "customer"]:
+                return JsonResponse({"error": "Unauthorized: Invalid user type."}, status=403)
+            # If everything is valid, return the decoded data
+            return decoded_data
+
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({"error": "Token has expired"}, status=401)
+        except jwt.InvalidTokenError:
+            return JsonResponse({"error": "Invalid token"}, status=401)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    def refresh_token(self, request):
+        # Verify the access token
+        payload = self.verify_token(request=request)
+
+        # Check if the result of verify_token is an error response (JsonResponse)
+        # if isinstance(payload, JsonResponse):
+        #     return payload  # Return the error response from verify_token
+       
+        try:
+            print(payload)
+            # Generate a new access token if the verification is successful
+            new_access_token = jwt.encode({
+                    "user_id": payload["user_id"],
+                    "email": payload["mobileNumber"],
+                    "userType": payload["userType"],
+                    "exp": datetime.utcnow() + timedelta(hours=36)  # Token valid for 36 hours
+                }, secret_key, algorithm="HS256")
+            return JsonResponse({
+                "token": new_access_token,
+                
+            }, status=200)
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
 
 
 

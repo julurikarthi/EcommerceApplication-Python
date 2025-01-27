@@ -115,6 +115,14 @@ class ProductViewSet(ViewSet):
             return store_operations.login_user(data=data, db=db)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['get'])
+    def refreshtoken(self, request):
+        try:
+            store_operations = UserOperations()
+            return store_operations.refresh_token(request=request)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
     
     @action(detail=False, methods=['get'])
     def test(self, request):
