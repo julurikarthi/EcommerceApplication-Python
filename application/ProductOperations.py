@@ -158,13 +158,13 @@ class ProductOperations:
             # Format the products for JSON serialization
             formatted_products = []
             for product in products:
-                print(product)
                 formatted_products.append({
                     "product_id": str(product["_id"]),
                     "store_id": str(product["store_id"]),
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
                     "stock": product.get("stock"),
+                    "imageids": product.get("imageIds"),
                     "category_id": product.get("category_id"),
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
