@@ -132,29 +132,37 @@ class ProductOperations:
 
             # Query to filter products by store_id if provided
             query = {}
+
             store_id = data["store_id"]
             if store_id:
                 if not ObjectId.is_valid(store_id):
                     return JsonResponse({"error": "Invalid store_id format."}, status=400)
                 query["store_id"] = store_id
+
+            category_id = data.get("category_id")
+            print(category_id)
+            if category_id:
+                 query["category_id"] = category_id
+
                # Pagination logic
             page = int(data.get("page", 1))  # Default to page 1 if not provided
             limit = 30
             skip = (page - 1) * limit
-
             # Fetch paginated products from the database
             products = list(db['Products'].find(query).skip(skip).limit(limit))
 
-
+        
             # Format the products for JSON serialization
             formatted_products = []
             for product in products:
+                print(product)
                 formatted_products.append({
                     "product_id": str(product["_id"]),
                     "store_id": str(product["store_id"]),
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
                     "stock": product.get("stock"),
+                    "category_id": product.get("category_id"),
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
                     "updated_at": product.get("updated_at", None),
