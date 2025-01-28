@@ -82,6 +82,7 @@ class ProductOperations:
             stock = data.get('stock')
             description = data.get('description', '')
             isPublish = data.get("isPublish", True)
+            imageIds = data.get("imageIds")
             # Ensure the product_id and store_id are valid ObjectId types
             if not ObjectId.is_valid(store_id):
                 return JsonResponse({"error": "Invalid store_id format."}, status=400)
@@ -110,6 +111,8 @@ class ProductOperations:
                 updated_data["stock"] = stock
             if isPublish:
                 updated_data["isPublish"] = isPublish
+            if imageIds:
+                updated_data["imageIds"] = imageIds
 
             # Update the product in the 'Products' collection
             result = db['Products'].update_one({"_id": ObjectId(product_id)}, {"$set": updated_data})
