@@ -140,9 +140,12 @@ class ProductOperations:
                 query["store_id"] = store_id
 
             category_id = data.get("category_id")
-            print(category_id)
             if category_id:
                  query["category_id"] = category_id
+
+            isPublish = data.get("isPublish")
+            if isPublish:
+                 query["isPublish"] = isPublish
 
                # Pagination logic
             page = int(data.get("page", 1))  # Default to page 1 if not provided
@@ -189,6 +192,11 @@ class ProductOperations:
                 if not ObjectId.is_valid(store_id):
                     return JsonResponse({"error": "Invalid store_id format."}, status=400)
                 query["store_id"] = store_id
+
+            category_id = data.get("category_id")
+            print(category_id)
+            if category_id:
+                 query["category_id"] = category_id
 
             # Pagination logic
             page = int(data.get("page", 1))  # Default to page 1 if not provided
