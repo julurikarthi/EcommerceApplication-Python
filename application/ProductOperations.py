@@ -82,7 +82,7 @@ class ProductOperations:
             stock = data.get('stock')
             description = data.get('description', '')
             isPublish = data.get("isPublish", True)
-            imageIds = data.get("imageIds")
+            imageIds = data.get("imageids")
             # Ensure the product_id and store_id are valid ObjectId types
             if not ObjectId.is_valid(store_id):
                 return JsonResponse({"error": "Invalid store_id format."}, status=400)
@@ -167,7 +167,7 @@ class ProductOperations:
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
                     "stock": product.get("stock"),
-                    "imageids": product.get("imageIds"),
+                    "imageids": product.get("imageids"),
                     "category_id": product.get("category_id"),
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
