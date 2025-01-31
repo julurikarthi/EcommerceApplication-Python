@@ -67,15 +67,12 @@ class ProductViewSet(ViewSet):
             return Response({"error": str(e)}, status=500)
         
     @action(detail=False, methods=['post'])
-    def getAllStores(self, request):
+    def getDashboardData(self, request):
         try:
-            token_response = self.verify_token(request=request)
-            if isinstance(token_response, JsonResponse):
-                return token_response
             data = request.data
             db = self.getDatabase()
             store_operations = StoreOperation()
-            return store_operations.getAllStores(data=data, db=db)
+            return store_operations.getDashboardData(data=data, db=db)
         except Exception as e:
             return Response({"error": str(e)}, status=500)
         

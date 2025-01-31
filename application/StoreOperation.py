@@ -44,15 +44,18 @@ class StoreOperation:
             image_id = data.get('image_id')
             user_id = data.get('user_id')
             tax_percentage = data.get('tax_percentage')
+            street = data.get('street')
+            city = data.get('city')
             pincode = data.get('pincode')
             state = data.get("state")
             currencycode = data.get("currencycode", None)
             serviceType = data.get('serviceType', [])
 
             # Validate required fields
-            if not store_name or not store_type or not image_id or not user_id or not pincode or not tax_percentage or not serviceType or not state or currencycode:
-                return JsonResponse({"error": "All fields ('store_name', 'store_type', 'image_id', 'user_id', 'pincode', 'serviceType', 'tax_percentage', 'state', 'currencycode') are required."}, status=400)
-
+            if not city or not store_name or not store_type or not image_id or not user_id or not pincode or not tax_percentage or not serviceType or not state or not currencycode or not street:
+                return JsonResponse({
+                    "error": "All fields ('store_name', 'store_type', 'image_id', 'user_id', 'pincode', 'serviceType', 'tax_percentage', 'state', 'currencycode', 'street', 'city') are required."
+                }, status=400)
             # Check if the user has storeOwner userType
             user = db['users'].find_one({"_id": ObjectId(user_id)})
             print(user)
@@ -68,7 +71,6 @@ class StoreOperation:
             valid_store_types = self.getStoreTypes()  # Call the getStoreTypes method
             if store_type not in valid_store_types:
                 return JsonResponse({"error": f"Invalid store type. Valid types are: {', '.join(valid_store_types)}"}, status=400)
-            print(data)
             
             # Validate serviceType to ensure all values are valid
             valid_service_types = self.serviceType()  # Call the serviceType method
@@ -91,7 +93,9 @@ class StoreOperation:
                 "state": state,
                 "tax_percentage": tax_percentage,
                 "serviceType": serviceType,
-                "currencycode": currencycode
+                "currencycode": currencycode,
+                "street": street,
+                "city": city
             }
             
             collection = db['Stores']
@@ -433,53 +437,59 @@ class StoreOperation:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
         
 
-    def getAllStores(self, data, db=None):
+    def getDashboardData(self, data, db=None):
+
+        return self.getAllStoresWithProducts(data=data, db=db)
+
+    def getAllStoresWithProducts(self, data, db=None):
         try:
-            # Ensure the database connection is provided
             if db is None:
                 raise ValueError("Database connection is required.")
 
-            # Extract pincode, state, and pagination details
             pincode = data.get("pincode")
             state = data.get("state")
-            page = int(data.get("page", 1))  # Default to page 1
-            limit = 20  # Number of stores per page
+            page = int(data.get("page", 1))
+            limit = 20
             skip = (page - 1) * limit
-            
+
             query = {}
 
-            # Step 1: Filter by pincode if provided
             if pincode:
                 query["pincode"] = pincode
                 stores = list(db['Stores'].find(query).skip(skip).limit(limit))
-
-                # Step 2: If no stores for pincode, fallback to state
                 if not stores and state:
                     query = {"state": state}
                     stores = list(db['Stores'].find(query).skip(skip).limit(limit))
-            
-            # Step 3: If no stores for state, fallback to all stores
-            if not stores:
-                stores = list(db['Stores'].find().skip(skip).limit(limit))
-            
-            # Format the stores for JSON serialization
+            else:
+                query = {"state": state}
+                stores = list(db['Stores'].find(query).skip(skip).limit(limit))
+
             formatted_stores = []
+            
             for store in stores:
-                formatted_stores.append({
-                    "store_id": str(store["_id"]),
-                    "store_name": store.get("store_name"),
-                    "store_type": store.get("store_type"),
-                    "pincode": store.get("pincode"),
-                    "state": store.get("state"),
-                    "image_id": store.get("image_id"),
-                    "customer_id": store.get("customer_id"),
-                    "tax_percentage": store.get("tax_percentage"),
-                    "service_type": store.get("serviceType"),
-                    "address": store.get("address"),
-                    "created_at": store.get("created_at"),
-                    "updated_at": store.get("updated_at"),
-                })
-            # Return the list of stores
+                store_id = str(store["_id"])
+                products = list(db['Products'].find({"store_id": store_id}))
+                print("products", products)
+                # Only include stores that have products
+                if products:
+                    formatted_stores.append({
+                        "store_id": store_id,
+                        "store_name": store.get("store_name"),
+                        "store_type": store.get("store_type"),
+                        "pincode": store.get("pincode"),
+                        "state": store.get("state"),
+                        "image_id": store.get("image_id"),
+                        "customer_id": store.get("customer_id"),
+                        "tax_percentage": store.get("tax_percentage"),
+                        "service_type": store.get("serviceType"),
+                        "address": store.get("address"),
+                        "street": store.get("street"),
+                        "city": store.get("city"),
+                        "created_at": store.get("created_at"),
+                        "updated_at": store.get("updated_at"),
+                        "products": self.convert_objectid_to_str(products)
+                    })
+
             return JsonResponse({
                 "stores": formatted_stores,
                 "page": page,
@@ -488,6 +498,10 @@ class StoreOperation:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+    
+    def convert_objectid_to_str(self,products):
+        return [{**product, "_id": str(product["_id"])} for product in products]
+
 
 
 
