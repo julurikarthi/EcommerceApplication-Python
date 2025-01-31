@@ -50,7 +50,7 @@ class ProductOperations:
                 "store_id": store_id,
                 "category_id": category_id,
                 "created_at": datetime.utcnow(),
-                "imageIds": imageIds,
+                "imageids": imageIds,
                 "isPublish": isPublish,
                 "store_type": store_type
             }
