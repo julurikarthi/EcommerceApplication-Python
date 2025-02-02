@@ -203,6 +203,24 @@ class ProductViewSet(ViewSet):
         except Exception as e:
                 return Response({"error": str(e)}, status=500)
         
+    @action(detail=False, methods=['post'], url_path='deleteImage')
+    def delete_image(self, request):
+        try:
+            data = request.data
+            store_operations = StoreOperation()
+            return store_operations.delete_image(data=data)
+        except Exception as e:
+                return Response({"error": str(e)}, status=500)
+    
+    @action(detail=False, methods=['get'], url_path='deleteallImages')
+    def deleteAllImages(self, request):
+        try:
+            store_operations = StoreOperation()
+            return store_operations.delete_all_images()
+        except Exception as e:
+                return Response({"error": str(e)}, status=500)
+
+        
     @action(detail=False, methods=['get'], url_path='downloadImage')
     def download_image(self, request):
         """

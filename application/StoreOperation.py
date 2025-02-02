@@ -247,6 +247,45 @@ class StoreOperation:
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+    def delete_image(self, data):
+        """
+        Delete a single image from the Amazon S3 bucket.
+        """
+        try:
+            file_name = data["file_name"]
+            if not file_name:
+                return Response({"error": "File name is required."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Delete the image from S3
+            file_path = file_name.strip()
+            default_storage.delete(file_path)
+            return Response({"message": "Image deleted successfully."}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    def delete_all_images(self):
+        """
+        Delete all images stored in the S3 bucket using default_storage.
+        """
+        try:
+            # List all files from storage
+            files = default_storage.listdir("")  # Returns (directories, files)
+            file_list = files[1]  # files[1] contains the list of file names
+
+            if not file_list:
+                return Response({"message": "No images found."}, status=status.HTTP_200_OK)
+
+            # Delete each file
+            for file_name in file_list:
+                default_storage.delete(file_name)
+
+            return Response({"message": "All images deleted successfully."}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        
 
     def createOffer(self, data, db=None):
         try:
