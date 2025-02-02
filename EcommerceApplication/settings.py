@@ -23,11 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-pq*48)m&ug1bor4(!7h4djkkxsaamb@fz7y!567+hb1-%ya&0m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+STATIC_URL = '/static/'
 # Define where the static files should be collected on disk
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID = 'AKIA6GBMEQ7ZW6EFSWFA'
 AWS_SECRET_ACCESS_KEY = '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'
@@ -96,7 +97,7 @@ CORS_ALLOWED_ORIGINS = [
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'application/templates/react')],
+        'DIRS': [os.path.join(BASE_DIR, 'application/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
