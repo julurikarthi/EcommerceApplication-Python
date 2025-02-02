@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Product</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    .product-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 500px;
+      margin: 20px;
+    }
+
+    .product-container h2 {
+      margin-bottom: 20px;
+      color: #333;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: calc(100% - 20px);
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #007BFF;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      color: #fff;
+      background-color: #007BFF;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+
+    .success-message,
+    .error-message {
+      margin: 15px 0;
+      padding: 10px;
+      border-radius: 5px;
+      text-align: center;
+    }
+      .top-space {
+      margin-top: 20px; /* Adds 20px of space above the element */
+      }
+    .success-message {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .error-message {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .file-input {
+      padding: 5px;
+      background: #f8f9fa;
+      border: 1px dashed #ccc;
+    }
+    /* Container for the image previews */
+    .preview-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+/* Each image wrapper */
+.image-wrapper {
+  position: relative;
+  flex: 0 0 auto; /* Prevent shrinking, ensure fixed width */
+  width: 100px;
+  height: 100px;
+}
+
+/* Preview images */
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Maintain aspect ratio, fill the container */
+  border-radius: 5px;
+}
+
+/* Delete button */
+.delete-button {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.hidden {
+  display: none;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+#createCategoryContainer {
+  margin-top: 10px;
+}
+
+#createCategoryButton {
+  margin-top: 5px;
+}
+
+
+  </style>
+</head>
+<body>
+
+<div class="product-container">
+  <h2>Add Product</h2>
+  <div id="message" style="display:none;"></div>
+
+  <form id="addProductForm">
+    <div class="form-group">
+      <label for="productName">Product Name</label>
+      <input type="text" id="productName" name="product_name" placeholder="Enter product name" required>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" rows="3" placeholder="Enter product description"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="price">Price</label>
+      <input type="number" id="price" name="price" step="0.01" placeholder="Enter product price" required>
+    </div>
+
+    <div class="form-group">
+      <label for="stock">Stock Quantity</label>
+      <input type="number" id="stock" name="stock" placeholder="Enter stock quantity" required>
+    </div>
+    
+    <div class="top-space"></div>
+    <div class="form-group">
+      <label for="category_id">Category</label>
+      <select id="category_id" name="category_id" required>
+        <option value="">Select a category</option>
+        <option value="create">+ Create New Category</option> <!-- Always present -->
+      </select>
+    </div>
+    <div id="createCategoryContainer">
+      <label for="new_category_name">New Category Name</label>
+      <input type="text" id="new_category_name" placeholder="Enter category name">
+      <button id="createCategoryButton">Create Category</button>
+    </div>
+    
+    <div class="top-space"></div>
+    <div class="form-group">
+      <label for="images">Product Images</label>
+      <input type="file" id="images" name="images" class="file-input" multiple accept="image/*">
+      <div class="top-space"></div>
+      <button id="uploadButton">Upload Images</button>
+    </div>
+    <div id="previewContainer" class="preview-container hidden">
+      <!-- Uploaded images will be displayed here -->
+    </div>
+    <div class="top-space"></div>
+
+    <button type="submit" class="btn">Add Product</button>
+  </form>
+</div>
+
+<script>
+document.getElementById('addProductForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const messageDiv = document.getElementById('message');
+  messageDiv.style.display = 'none';
+  store_id = localStorage.getItem('store_id');
+  console.log("store_id",store_id)
+  store_type = localStorage.getItem('store_type');
+
+  try {
+    const formData = {
+      product_name: document.getElementById('productName').value.trim(),
+      description: document.getElementById('description').value.trim(),
+      price: parseFloat(document.getElementById('price').value),
+      stock: parseInt(document.getElementById('stock').value),
+      store_id: store_id,
+      category_id: document.getElementById('category_id').value.trim(),
+      "imageids": uploadedImageIds,
+      "store_type": store_type
+    };
+
+    // Validate required fields
+    if (!formData.product_name || !formData.price || !formData.stock || 
+        !formData.store_id || !formData.category_id) {
+      throw new Error('Please fill all required fields');
+    }
+
+    // Handle image uploads
+
+    // Submit product data
+    const token = localStorage.getItem('token');
+    console.log(token);
+    const url = 'https://18.188.42.21/api/createProduct/';
+
+    const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${token}`,
+                            },
+                            body: JSON.stringify(formData),
+                          });
+
+
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to add product');
+    }
+
+    const data = await response.json();
+    displayMessage(`Product "${data.product_id}" added successfully!`, 'success');
+    document.getElementById('addProductForm').reset();
+
+  } catch (error) {
+    console.log(error)
+    displayMessage(error.message || 'An error occurred', 'error');
+  }
+});
+
+function displayMessage(message, type) {
+  const messageDiv = document.getElementById('message');
+  messageDiv.textContent = message;
+  messageDiv.className = `${type}-message`;
+  messageDiv.style.display = 'block';
+  
+  // Auto-hide success messages after 5 seconds
+  if (type === 'success') {
+    setTimeout(() => {
+      messageDiv.style.display = 'none';
+    }, 5000);
+  }
+}
+
+async function handleImageUpload() {
+  const imageFiles = document.getElementById('images').files; // Get selected files
+  const formData = { imageids: [] }; // Initialize formData with an empty imageids array
+
+  if (imageFiles.length > 0) {
+    try {
+      // Upload all images concurrently using Promise.all
+      await Promise.all(
+        Array.from(imageFiles).map(async (file) => {
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', file);
+
+          const response = await fetch('https://18.188.42.21/api/uploadImage/', {
+            method: 'POST',
+            body: uploadFormData,
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Image upload failed');
+          }
+
+          const result = await response.json();
+          formData.imageids.push(result.file_name);
+        })
+      );
+
+      console.log('All images uploaded successfully imgeids:', formData.imageids);
+    } catch (error) {
+      console.error('Error uploading images:', error.message);
+    }
+  } else {
+    console.log('No images selected for upload.');
+  }
+
+  return formData; // Return the updated formData with image IDs
+}
+document.addEventListener('DOMContentLoaded', fetchCategories);
+
+async function fetchCategories() {
+  const token = localStorage.getItem('token');
+  const storeId = localStorage.getItem('store_id'); 
+  const url = 'https://18.188.42.21/api/getstoreCategories/';
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({ store_id: storeId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch categories');
+    }
+
+    const data = await response.json();
+    populateDropdown(data.categories);
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+function populateDropdown(categories) {
+  const dropdown = document.getElementById('category_id');
+
+  // Clear existing options (if any)
+  dropdown.innerHTML = '<option value="">Select a category</option>';
+
+  // Populate options dynamically
+  categories.forEach((category) => {
+    const option = document.createElement('option');
+    option.value = category.category_id; // Set category_id as value
+    option.textContent = category.category_name; // Display category_name
+    dropdown.appendChild(option);
+  });
+}
+const uploadedImageIds = [];
+const previewContainer = document.getElementById('previewContainer');
+const uploadButton = document.getElementById('uploadButton');
+
+document.getElementById('uploadButton').addEventListener('click', async () => {
+  const imageFiles = document.getElementById('images').files; // Get selected files
+
+  if (imageFiles.length === 0) {
+    alert('Please select at least one image to upload.');
+    return;
+  }
+
+  try {
+    // Iterate over selected files and upload each one
+    for (const file of imageFiles) {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('https://18.188.42.21/api/uploadImage/', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Image upload failed');
+      }
+
+      const result = await response.json();
+      uploadedImageIds.push(result.file_name);
+      displayImagePreview(file, result.file_name);
+    }
+
+    console.log('Uploaded Image IDs:', uploadedImageIds);
+    alert('Image uploaded successfully!');
+  } catch (error) {
+    console.error('Error uploading images:', error.message);
+    alert('Failed to upload images. Please try again.');
+  }
+});
+
+// Function to display image previews
+function displayImagePreview(file, imageId) {
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    // Create a container for the image and delete button
+    const imageWrapper = document.createElement('div');
+    imageWrapper.classList.add('image-wrapper');
+
+    // Create the image element
+    const img = document.createElement('img');
+    img.src = e.target.result; // Use the file's data URL
+    img.alt = file.name;
+    img.classList.add('preview-image');
+
+    // Create the delete button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = '×'; // Cross symbol for delete
+    deleteButton.classList.add('delete-button');
+    deleteButton.addEventListener('click', () => removeImage(imageWrapper, imageId));
+
+    // Append the image and button to the wrapper
+    imageWrapper.appendChild(img);
+    imageWrapper.appendChild(deleteButton);
+
+    // Add the wrapper to the preview container
+    previewContainer.appendChild(imageWrapper);
+    previewContainer.classList.remove('hidden');
+  };
+
+  reader.readAsDataURL(file); // Read the file as a data URL for preview
+}
+
+// Function to remove an image preview and its corresponding ID
+function removeImage(imageWrapper, imageId) {
+  // Remove the wrapper from the DOM
+  previewContainer.removeChild(imageWrapper);
+
+  // Remove the corresponding ID from uploadedImageIds
+  const index = uploadedImageIds.indexOf(imageId);
+  if (index > -1) {
+    uploadedImageIds.splice(index, 1);
+  }
+
+  console.log('Updated Image IDs:', uploadedImageIds);
+}
+
+const token = localStorage.getItem('token');
+const storeId = localStorage.getItem('store_id'); 
+
+const categoryDropdown = document.getElementById('category_id');
+const createCategoryContainer = document.getElementById('createCategoryContainer');
+const createCategoryButton = document.getElementById('createCategoryButton');
+const newCategoryNameInput = document.getElementById('new_category_name');
+
+// Handle "Create Category" button click
+createCategoryButton.addEventListener('click', async () => {
+  const newCategoryName = newCategoryNameInput.value.trim();
+
+  if (!newCategoryName) {
+    alert('Please enter a category name.');
+    return;
+  }
+
+  try {
+    const response = await fetch('https://18.188.42.21/api/createCategory/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        store_id: storeId,
+        category_name: newCategoryName,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to create category.');
+    }
+
+    const result = await response.json();
+    console.log('New category created:', result);
+
+    // Add the new category to the dropdown
+    const newOption = document.createElement('option');
+    newOption.value = result.category_id; // Use the returned `category_id` from the API
+    newOption.textContent = result.category_name; // Use the returned `category_name` from the API
+    categoryDropdown.appendChild(newOption);
+
+    // Reset the input and hide the "Create Category" container
+    newCategoryNameInput.value = '';
+
+    // Select the newly created category in the dropdown
+    categoryDropdown.value = result.category_id;
+
+  } catch (error) {
+    console.error('Error creating category:', error.message);
+    alert('Failed to create category. Please try again.');
+  }
+});
+
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f4f4f4;
+    }
+
+    .login-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .login-container h2 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #555;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: calc(100% - 20px);
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #007BFF;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      color: #fff;
+      background-color: #007BFF;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #0056b3;
+    }
+
+    .error-message {
+      color: red;
+      margin-top: 10px;
+    }
+
+    .success-message {
+        color : green; 
+        margin-top :10 px
+}
+</style>
+</head>
+<body>
+  
+<div class="login-container">
+  <h2>Login</h2>
+  
+  <!-- Error or Success Messages -->
+  <div id="message" class="error-message" style="display:none;"></div>
+  
+  <!-- Login Form -->
+  <form id="loginForm">
+    <div class="form-group">
+      <label for="phone">Enter Phone Number</label>
+      <input type="text" id="phone" name="phone" placeholder="Enter your phone number" required />
+    </div>
+
+    <div class="form-group">
+        <label for="userType">User Type</label>
+        <select id="userType" name="userType" required>
+            <option value="">Select User Type</option>
+            <option value="storeOwner">Store Owner</option>
+            <option value="customer">Customer</option>
+        </select>
+    </div>
+
+    <!-- Login Button -->
+    <button type="submit" class="btn">Login</button>
+  </form>
+</div>
+
+<script>
+// Handle form submission
+document.getElementById('loginForm').addEventListener('submit', async function(event) {
+  event.preventDefault(); // Prevent default form submission
+
+  const phoneInput = document.getElementById('phone');
+  const userTypeInput = document.getElementById('userType');
+
+  // Validate phone number and user type
+  const phoneNumber = phoneInput.value.trim();
+  const userType = userTypeInput.value;
+
+  if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+    displayMessage("Please enter a valid phone number (10 digits).", "error");
+    return; 
+  }
+
+  if (!userType) {
+    displayMessage("Please select a user type.", "error");
+    return; 
+  }
+
+  // Simulate API call (replace this with actual API integration)
+  try {
+    const response = await fetch('https://18.188.42.21/api/login/', { // Replace with your Django API endpoint
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mobileNumber: phoneNumber, userType })
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to log in.");
+    }
+
+    const data = await response.json();
+  
+
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(data.user))
+    localStorage.setItem('store_id', data.user.store_id)
+    localStorage.setItem('store_type', data.user.store_type)
+
+    // Display success message
+    displayMessage(`Login successful! Welcome, ${data.name || 'User'}.`, "success");
+
+    // Redirect to Add Product page
+    setTimeout(() => {
+        window.location.href = '/addProduct'; // Redirect to Add Product page
+    }, 2000); // Wait for success message to show before redirecting
+
+  } catch (error) {
+    displayMessage(error.message || "An error occurred.", "error");
+  }
+});
+
+// Function to display messages
+function displayMessage(message, type) {
+  const messageDiv = document.getElementById('message');
+
+  messageDiv.textContent = message; 
+  messageDiv.style.display = 'block';
+
+  if (type === "error") {
+    messageDiv.style.color = "red";
+  } else if (type === "success") {
+    messageDiv.style.color = "green";
+  }
+}
+</script>
+
+</body>
+</html>
