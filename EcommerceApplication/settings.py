@@ -91,12 +91,13 @@ ROOT_URLCONF = 'EcommerceApplication.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:8000",
+    "https://18.188.42.21"
 ]
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "application/templates"], 
+        'DIRS': [os.path.join(BASE_DIR, 'application/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
