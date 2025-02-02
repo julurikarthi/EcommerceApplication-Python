@@ -96,7 +96,7 @@ CORS_ALLOWED_ORIGINS = [
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'application/templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'application/templates/react')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
