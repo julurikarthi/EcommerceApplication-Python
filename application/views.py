@@ -28,18 +28,37 @@ from .CategoryOperations import CategoryOperations
 import jwt
 from datetime import datetime, timedelta
 from django.conf import settings
+from django.shortcuts import render
+from django.shortcuts import render
+from django.views import View
+
+
 
 secret_key = settings.SECRET_KEY
 
+
 MONGODB_CONNECTION_STRING = "mongodb://18.188.42.21:27017/"
 
+class HomeView(View):
+    def get(self, request):
+        return render(request, "react/index.html")
+    
+
+class AddProductView(View):
+    def get(self, request):
+        # Render the addProduct.html template
+        return render(request, "react/addProduct.html")
+
 class ProductViewSet(ViewSet):
+
+    def home(request):
+        return render(request, "home.html")
+    
     def list(self, request):
         # Handle GET request (e.g., retrieve all products)
         products = [{"id": 1, "name": "Product A"}, {"id": 2, "name": "Product B"}]
         return Response(products)
 
-    
     @action(detail=False, methods=['post'])
     def createStore(self, request):
         # Parsing the incoming data
