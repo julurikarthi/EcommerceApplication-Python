@@ -26,9 +26,8 @@ SECRET_KEY = 'django-insecure-pq*48)m&ug1bor4(!7h4djkkxsaamb@fz7y!567+hb1-%ya&0m
 DEBUG = False
 
 ALLOWED_HOSTS = ['*']
-STATIC_URL = '/static/'
 # Define where the static files should be collected on disk
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID = 'AKIA6GBMEQ7ZW6EFSWFA'
 AWS_SECRET_ACCESS_KEY = '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'
