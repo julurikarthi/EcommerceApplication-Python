@@ -135,7 +135,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
   // Simulate API call (replace this with actual API integration)
   try {
-    const response = await fetch('https://18.188.42.21/api/login/', { // Replace with your Django API endpoint
+    const response = await fetch('https://18.188.42.21/api/loginstoreOwner/', { // Replace with your Django API endpoint
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mobileNumber: phoneNumber, userType })

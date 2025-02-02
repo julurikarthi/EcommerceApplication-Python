@@ -395,6 +395,63 @@ class UserOperations:
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
         
+    
+    def login_storeOwner(self, data, db):
+        try:
+            # Validate input
+            mobileNumber = data.get("mobileNumber")
+            user_type = data.get("userType")  # Fetch userType from request
+
+            if not mobileNumber or not user_type:
+                return JsonResponse({"error": "mobileNumber and userType are required."}, status=400)
+
+            # Validate userType
+            if user_type not in ["customer", "storeOwner"]:
+                return JsonResponse({"error": "Invalid userType. Must be 'customer' or 'storeOwner'."}, status=400)
+
+            # Fetch the user from the database
+            user = db['users'].find_one({"mobileNumber": mobileNumber, "userType": user_type})
+            if not user:
+                response = self.create_user(data=data, db=db)
+                user = db['users'].find_one({"mobileNumber": mobileNumber, "userType": user_type})
+
+            # Check if the user is a store owner but has no store
+            store_id = None
+            store_type = None
+            store = db['Stores'].find_one({"user_id": str(user["_id"])})
+
+            if user_type == "storeOwner" and not store:
+                return JsonResponse({"error": "You are not a store owner."}, status=403)
+
+            if store:
+                store_id = str(store["_id"])
+                store_type = store["store_type"]
+
+            # Generate JWT token
+            token = jwt.encode({
+                "user_id": str(user["_id"]),
+                "mobileNumber": user["mobileNumber"],
+                "userType": user["userType"],
+                "exp": datetime.utcnow() + timedelta(hours=36)  # Token valid for 36 hours
+            }, secret_key, algorithm="HS256")
+
+            # Prepare and return the response
+            return JsonResponse({
+                "message": "Login successful.",
+                "token": token,
+                "user": {
+                    "user_id": str(user["_id"]),
+                    "userType": user["userType"],
+                    "mobileNumber": user["mobileNumber"],
+                    "store_id": store_id,
+                    "store_type": store_type
+                }
+            }, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+        
     def verify_token(self, request):
         try:
             # Extract token from the Authorization header
