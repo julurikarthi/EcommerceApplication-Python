@@ -396,6 +396,19 @@ class UserOperations:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
         
     
+    def delete_all_collections(self, db):
+        try:
+            collections = db.list_collection_names()  # Get all collection names
+            for collection in collections:
+                db[collection].drop()  # Drop each collection
+
+            return JsonResponse({"message": "All collections deleted successfully."}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+        
+    
     def login_storeOwner(self, data, db):
         try:
             # Validate input

@@ -142,6 +142,16 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
         
+    @action(detail=False, methods=['get'])
+    def delete_all_collections(self, request):
+        try:
+            db = self.getDatabase()
+            store_operations = UserOperations()
+            return store_operations.delete_all_collections(db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
+        
         
     @action(detail=False, methods=['get'])
     def refreshtoken(self, request):
