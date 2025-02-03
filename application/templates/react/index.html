@@ -123,7 +123,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
   const phoneNumber = phoneInput.value.trim();
   const userType = userTypeInput.value;
 
-  if (!phoneNumber || !/^\d{10}$/.test(phoneNumber)) {
+  if (!phoneNumber || !/^\d{12}$/.test(phoneNumber)) {
     displayMessage("Please enter a valid phone number (10 digits).", "error");
     return; 
   }
