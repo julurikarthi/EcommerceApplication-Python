@@ -167,7 +167,7 @@ class ProductOperations:
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
                     "stock": product.get("stock"),
-                    "imageids": product.get("imageIds"),
+                    "imageids": product.get("imageids"),
                     "isPublish": product.get("isPublish"),
                     "category_id": product.get("category_id"),
                     "description": product.get("description", ""),
