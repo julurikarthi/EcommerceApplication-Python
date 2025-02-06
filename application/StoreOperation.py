@@ -225,7 +225,7 @@ class StoreOperation:
             # Save to S3
             default_storage.save(file_name, ContentFile(img_io.read()))
 
-            return Response({"image_id": file_name}, status=status.HTTP_201_CREATED)  # Return only image ID
+            return Response({"file_name": file_name}, status=status.HTTP_201_CREATED)  # Return only image ID
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
