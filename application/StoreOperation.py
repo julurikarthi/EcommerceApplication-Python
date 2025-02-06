@@ -13,6 +13,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework import status
 from django.http import JsonResponse
+from django.http import FileResponse, HttpResponseRedirect
+from PIL import Image
+import io
 
 class StoreOperation:
 
@@ -184,65 +187,45 @@ class StoreOperation:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
         
 
+    @action(detail=False, methods=['post'], url_path='uploadImage')
     def uploadImage(self, request):
-        """
-        Custom action to handle image upload via POST request, compressing the image to a maximum of 3MB.
-        """
-        if 'image' not in request.FILES:
-            return Response({"error": "No image file found in the request."}, status=status.HTTP_400_BAD_REQUEST)
-        
         try:
-            # Get the uploaded image file
-            image_file = request.FILES['image']
+            image_file = request.FILES.get("image")  # Get uploaded image
             
-            # Open the image using Pillow
-            image = Image.open(image_file)
+            if not image_file:
+                return Response({"error": "No image provided"}, status=status.HTTP_400_BAD_REQUEST)
             
-            # Check if the image is not already in RGB mode (PNG images are typically in RGBA)
-            if image.mode in ("RGBA", "P"):  # If the image has an alpha channel or palette
-                image = image.convert("RGB")  # Convert to RGB for saving as JPEG
-            
-            # Resize the image (e.g., max width of 800px while maintaining aspect ratio)
-            max_width = 800
-            if image.width > max_width:
-                new_height = int((max_width / image.width) * image.height)
-                image = image.resize((max_width, new_height), Image.ANTIALIAS)
-            
-            # Compress the image (convert to JPEG for better compression)
-            compressed_image_io = BytesIO()
+            # Open image
+            img = Image.open(image_file)
 
-            # Check for original image size and compress to meet the 3MB limit
-            quality = 85  # Start with a quality of 85% for JPEG
-            while True:
-                # Save the image as JPEG and check the file size
-                image.save(compressed_image_io, format='JPEG', quality=quality)
-                compressed_image_io.seek(0)
-                
-                # Check the size of the compressed image
-                if compressed_image_io.getbuffer().nbytes <= 3 * 1024 * 1024:  # 3MB in bytes
-                    break
-                
-                # If the image is still too large, reduce quality by 5%
-                quality -= 5
-                if quality < 50:  # Prevent the quality from going too low
-                    break
+            # Convert RGBA to RGB (Fix transparency issue)
+            if img.mode == "RGBA":
+                img = img.convert("RGB")
 
-            # Save the compressed image to Django's storage backend
-            compressed_image_io.seek(0)  # Reset the IO pointer
+            # Resize image
+            max_width = 500
+            aspect_ratio = img.height / img.width
+            new_height = int(max_width * aspect_ratio)
+            img = img.resize((max_width, new_height), Image.LANCZOS)
 
-            # Generate a unique file name for the image
+            # Save to memory
+            img_io = io.BytesIO()
+            img.save(img_io, format="JPEG", quality=85)  # Ensure JPEG format
+            img_io.seek(0)
+
+            # Generate unique image ID
+            unique_id = str(uuid.uuid4())
+
+            # Clean filename and create unique file name
             clean_name = image_file.name.replace(" ", "_")
             clean_name = "".join(c for c in clean_name if c.isalnum() or c in ['_', '.'])
-            
-            # Use a unique identifier for the file name to ensure uniqueness
-            file_extension = "jpg"  # Ensure the extension is 'jpg' after compression
-            unique_id = str(uuid.uuid4())
+            file_extension = "jpg"
             file_name = f"{unique_id}_{clean_name}.{file_extension}"
 
-            # Save to storage
-            file_path = default_storage.save(file_name, ContentFile(compressed_image_io.read()))
-            
-            return Response({"message": "Image uploaded successfully.", "file_name": file_name}, status=status.HTTP_200_OK)
+            # Save to S3
+            default_storage.save(file_name, ContentFile(img_io.read()))
+
+            return Response({"image_id": file_name}, status=status.HTTP_201_CREATED)  # Return only image ID
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

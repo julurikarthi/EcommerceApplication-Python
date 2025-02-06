@@ -31,6 +31,9 @@ from django.conf import settings
 from django.shortcuts import render
 from django.shortcuts import render
 from django.views import View
+from django.http import FileResponse, HttpResponseRedirect
+from PIL import Image
+import io
 
 
 
@@ -240,24 +243,35 @@ class ProductViewSet(ViewSet):
             return store_operations.delete_all_images()
         except Exception as e:
                 return Response({"error": str(e)}, status=500)
-
-        
+    
+   
     @action(detail=False, methods=['get'], url_path='downloadImage')
     def download_image(self, request):
         """
-        Custom action to handle image download via GET request.
+        Serve a resized image with a max width of 500px.
         """
         file_name = request.GET.get('file_name')
-        
+        max_width = 500  # Fixed width for mobile
+
         if not file_name:
             return Response({"error": "File name is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            # Generate the file URL using the default storage backend
-            file_url = default_storage.url(file_name)
+            with default_storage.open(file_name, 'rb') as file:  # Open file from storage
+                img = Image.open(file)
 
-            # Redirect to the file URL (pre-signed URL if configured for S3, etc.)
-            return HttpResponseRedirect(file_url)
+                # Maintain aspect ratio
+                aspect_ratio = img.height / img.width
+                new_height = int(max_width * aspect_ratio)
+
+                img = img.resize((max_width, new_height), Image.LANCZOS)
+
+                # Save resized image in memory
+                img_io = io.BytesIO()
+                img.save(img_io, format="JPEG", quality=85)  # Optimize quality
+                img_io.seek(0)
+
+                return FileResponse(img_io, content_type="image/jpeg")
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
