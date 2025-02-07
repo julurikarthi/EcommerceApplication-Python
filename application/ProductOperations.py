@@ -149,7 +149,6 @@ class ProductOperations:
             isPublish = data.get("isPublish")
             if isPublish:
                  query["isPublish"] = isPublish
-
                # Pagination logic
             page = int(data.get("page", 1))  # Default to page 1 if not provided
             limit = 30
