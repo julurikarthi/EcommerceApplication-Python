@@ -112,7 +112,7 @@ class ProductOperations:
             if isPublish:
                 updated_data["isPublish"] = isPublish
             if imageIds:
-                updated_data["imageIds"] = imageIds
+                updated_data["imageids"] = imageIds
 
             # Update the product in the 'Products' collection
             result = db['Products'].update_one({"_id": ObjectId(product_id)}, {"$set": updated_data})
