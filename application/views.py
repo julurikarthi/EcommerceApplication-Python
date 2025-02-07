@@ -89,6 +89,36 @@ class ProductViewSet(ViewSet):
             return Response({"error": str(e)}, status=500)
         
     @action(detail=False, methods=['post'])
+    def deleteStore(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.delete_Store(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def getStoreDetails(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.get_StoreDetails(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+    
+    @action(detail=False, methods=['post'])
+    def updateStoreDetails(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.update_StoreDetails(data=data, db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
     def getDashboardData(self, request):
         try:
             data = request.data

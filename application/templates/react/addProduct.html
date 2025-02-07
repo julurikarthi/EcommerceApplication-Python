@@ -253,7 +253,7 @@ document.getElementById('addProductForm').addEventListener('submit', async (even
     // Submit product data
     const token = localStorage.getItem('token');
     console.log(token);
-    const url = 'http://127.0.0.1:8000/api/createProduct/';
+    const url = 'https://18.188.42.21/api/createProduct/';
 
     const response = await fetch(url, {
                             method: 'POST',
@@ -307,7 +307,7 @@ async function handleImageUpload() {
           const uploadFormData = new FormData();
           uploadFormData.append('image', file);
 
-          const response = await fetch('http://127.0.0.1:8000/api/uploadImage/', {
+          const response = await fetch('https://18.188.42.21/api/uploadImage/', {
             method: 'POST',
             body: uploadFormData,
           });
@@ -337,7 +337,7 @@ document.addEventListener('DOMContentLoaded', fetchCategories);
 async function fetchCategories() {
   const token = localStorage.getItem('token');
   const storeId = localStorage.getItem('store_id'); 
-  const url = 'http://127.0.0.1:8000/api/getstoreCategories/';
+  const url = 'https://18.188.42.21/api/getstoreCategories/';
   
   try {
     const response = await fetch(url, {
@@ -396,7 +396,7 @@ document.getElementById('uploadButton').addEventListener('click', async () => {
         const formData = new FormData();
         formData.append('image', compressedFile);
 
-        const response = await fetch('http://127.0.0.1:8000/api/uploadImage/', {
+        const response = await fetch('https://18.188.42.21/api/uploadImage/', {
           method: 'POST',
           body: formData,
         });
@@ -526,7 +526,7 @@ createCategoryButton.addEventListener('click', async () => {
   }
 
   try {
-    const url = 'http://127.0.0.1:8000/api/createCategory/';
+    const url = 'https://18.188.42.21/api/createCategory/';
     const headers = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`,

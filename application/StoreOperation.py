@@ -37,7 +37,42 @@ class StoreOperation:
             "storeTypes": store_types,
             "serviceTypes": service_types
         }
+    
 
+    def delete_Store(self, data, db):
+        try:
+            # Validate store_id
+            store_id = data.get('store_id')
+            if not store_id:
+                return JsonResponse({"error": "'store_id' is required."}, status=400)
+
+            # Convert store_id to ObjectId
+            try:
+                store_id_obj = ObjectId(store_id)
+            except Exception:
+                return JsonResponse({"error": "Invalid 'store_id' format."}, status=400)
+
+            # Fetch store details
+            store = db['Stores'].find_one({"_id": store_id_obj})
+            if not store:
+                return JsonResponse({"error": "Store not found."}, status=404)
+
+            # Delete all products linked to this store
+            product_delete_result = db['Products'].delete_many({"store_id": str(store_id_obj)})
+
+            # Delete the store
+            store_delete_result = db['Stores'].delete_one({"_id": store_id_obj})
+
+            if store_delete_result.deleted_count > 0:
+                return JsonResponse({
+                    "message": "Store and its products deleted successfully!",
+                    "deleted_products": product_delete_result.deleted_count
+                }, status=200)
+            else:
+                return JsonResponse({"error": "Failed to delete store."}, status=500)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
 
     def create_Store(self, data, db):
         try: 
@@ -463,6 +498,7 @@ class StoreOperation:
 
         return self.getAllStoresWithProducts(data=data, db=db)
 
+
     def getAllStoresWithProducts(self, data, db=None):
         try:
             if db is None:
@@ -476,23 +512,33 @@ class StoreOperation:
 
             query = {}
 
+            print("Fetching stores...")
+
+            # Query by pincode or state
             if pincode:
                 query["pincode"] = pincode
-                stores = list(db['Stores'].find(query).skip(skip).limit(limit))
+                stores = list(db['Stores'].find(query))
+                print("Stores by pincode:", len(stores))
+
+                # If no stores found in pincode, search by state
                 if not stores and state:
                     query = {"state": state}
-                    stores = list(db['Stores'].find(query).skip(skip).limit(limit))
+                    stores = list(db['Stores'].find(query))
+                    print("Stores by state:", len(stores))
             else:
-                query = {"state": state}
-                stores = list(db['Stores'].find(query).skip(skip).limit(limit))
+                query = {"state": state} if state else {}
+                stores = list(db['Stores'].find(query))
 
             formatted_stores = []
             
             for store in stores:
                 store_id = str(store["_id"])
-                products = list(db['Products'].find({"store_id": store_id}))
-                print("products", products)
-                # Only include stores that have products
+                print("Checking store ID:", store_id)
+
+                # Get only published products for this store
+                products = list(db['Products'].find({"store_id": store_id, "isPublish": True}))
+
+                # Only include stores that have published products
                 if products:
                     formatted_stores.append({
                         "store_id": store_id,
@@ -512,17 +558,86 @@ class StoreOperation:
                         "products": self.convert_objectid_to_str(products)
                     })
 
+                # Stop once we reach 20 stores
+                if len(formatted_stores) >= limit:
+                    break
+
             return JsonResponse({
-                "stores": formatted_stores,
+                "stores": formatted_stores[:limit],  # Ensure only 20 stores are returned
                 "page": page,
                 "total_stores": len(formatted_stores)
             }, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
     
     def convert_objectid_to_str(self,products):
         return [{**product, "_id": str(product["_id"])} for product in products]
+
+    def get_StoreDetails(self, data, db):
+        try:
+            # Validate store_id
+            store_id = data.get("store_id")
+            if not store_id:
+                return JsonResponse({"error": "'store_id' is required."}, status=400)
+
+            # Convert store_id to ObjectId
+            try:
+                store_id_obj = ObjectId(store_id)
+            except Exception:
+                return JsonResponse({"error": "Invalid 'store_id' format."}, status=400)
+
+            # Fetch store details
+            store = db['Stores'].find_one({"_id": store_id_obj}, {"_id": 0})  # Exclude MongoDB _id from response
+            if not store:
+                return JsonResponse({"error": "Store not found."}, status=404)
+
+            return JsonResponse({"store": store}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+        
+    def update_StoreDetails(self, data, db):
+        try:
+            # Extract store_id
+            store_id = data.get('store_id')
+            if not store_id:
+                return JsonResponse({"error": "'store_id' is required."}, status=400)
+
+            # Convert store_id to ObjectId
+            try:
+                store_id_obj = ObjectId(store_id)
+            except Exception:
+                return JsonResponse({"error": "Invalid 'store_id' format."}, status=400)
+
+            # Check if the store exists
+            store = db['Stores'].find_one({"_id": store_id_obj})
+            if not store:
+                return JsonResponse({"error": "Store not found."}, status=404)
+
+            # Allowed fields for updating
+            allowed_fields = {
+                "store_name", "store_type", "image_id", "tax_percentage",
+                "street", "city", "pincode", "state", "currencycode", "serviceType", "address"
+            }
+
+            # Prepare update data
+            update_data = {key: data[key] for key in allowed_fields if key in data}
+
+            if not update_data:
+                return JsonResponse({"error": "No valid fields provided for update."}, status=400)
+
+            # Perform update operation
+            update_result = db['Stores'].update_one({"_id": store_id_obj}, {"$set": update_data})
+
+            if update_result.modified_count > 0:
+                return JsonResponse({"message": "Store details updated successfully!"}, status=200)
+            else:
+                return JsonResponse({"message": "No changes were made to the store."}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
 
 
 
