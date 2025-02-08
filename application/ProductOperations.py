@@ -218,10 +218,12 @@ class ProductOperations:
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
                     "stock": product.get("stock"),
+                    "imageids": product.get("imageids"),
+                    "isPublish": product.get("isPublish"),
+                    "category_id": product.get("category_id"),
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
                     "updated_at": product.get("updated_at", None),
-                    "isPublish": product.get("isPublish", True)  # Ensure this is included
                 })
 
             # Return the list of published products

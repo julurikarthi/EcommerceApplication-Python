@@ -131,15 +131,21 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getstoreCategories(self, request):
         try:
-            token_response = self.verify_token(request=request)
-            if isinstance(token_response, JsonResponse):
-                return token_response
             data = request.data
+
+            # Skip token verification for customers
+            if data.get("userType") != "Customer":
+                token_response = self.verify_token(request=request)
+                if isinstance(token_response, JsonResponse):
+                    return token_response
+            
             db = self.getDatabase()
             store_operations = StoreOperation()
             return store_operations.getCategoriesByStore(data=data, db=db)
+
         except Exception as e:
             return Response({"error": str(e)}, status=500)
+
 
     @action(detail=False, methods=['post'])
     def getCategoryProductByStore(self, request):
@@ -393,9 +399,6 @@ class ProductViewSet(ViewSet):
     @action(detail=False, methods=['post'])
     def getAllPublishedProducts(self, request):
         try:
-            token_response = self.verify_token(request=request)
-            if isinstance(token_response, JsonResponse):
-                return token_response
             data = request.data
             db = self.getDatabase()
             product_operations = ProductOperations()
