@@ -114,7 +114,11 @@ class UserOperations:
                 # Update or add products (Replace quantity instead of adding)
                 for processed_product in processed_products:
                     product_id = processed_product["product_id"]
-                    existing_product_map[product_id] = processed_product  # Replace quantity
+                    if processed_product['quantity'] > 0:
+                        existing_product_map[product_id] = processed_product 
+                    else:
+                        existing_product_map.pop(product_id, None)
+
 
                 updated_products = list(existing_product_map.values())
 
@@ -123,7 +127,6 @@ class UserOperations:
                     {"_id": existing_cart["_id"]},
                     {"$set": {"products": updated_products, "updated_at": datetime.utcnow()}}
                 )
-
             else:
                 # Create new cart entry
                 cart_data = {
