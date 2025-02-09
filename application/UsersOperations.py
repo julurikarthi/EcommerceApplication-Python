@@ -111,13 +111,10 @@ class UserOperations:
                 # Convert existing products into a dictionary for quick lookup
                 existing_product_map = {p["product_id"]: p for p in existing_products}
 
-                # Update or add products
+                # Update or add products (Replace quantity instead of adding)
                 for processed_product in processed_products:
                     product_id = processed_product["product_id"]
-                    if product_id in existing_product_map:
-                        existing_product_map[product_id]["quantity"] = processed_product["quantity"]
-                    else:
-                        existing_product_map[product_id] = processed_product
+                    existing_product_map[product_id] = processed_product  # Replace quantity
 
                 updated_products = list(existing_product_map.values())
 
@@ -127,14 +124,6 @@ class UserOperations:
                     {"$set": {"products": updated_products, "updated_at": datetime.utcnow()}}
                 )
 
-                return JsonResponse({
-                    "message": "Cart updated successfully.",
-                    "cart_id": str(existing_cart["_id"]),
-                    "total_amount": round(total_amount, 2),
-                    "tax_amount": round(tax_amount, 2),
-                    "total_amount_with_tax": round(total_amount_with_tax, 2),
-                    "products": updated_products
-                }, status=200)
             else:
                 # Create new cart entry
                 cart_data = {
@@ -144,19 +133,30 @@ class UserOperations:
                     "created_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow()
                 }
-                result = db['Carts'].insert_one(cart_data)
+                db['Carts'].insert_one(cart_data)
 
-                return JsonResponse({
-                    "message": "Cart created successfully.",
-                    "cart_id": str(result.inserted_id),
-                    "total_amount": round(total_amount, 2),
-                    "tax_amount": round(tax_amount, 2),
-                    "total_amount_with_tax": round(total_amount_with_tax, 2),
-                    "products": processed_products
-                }, status=201)
+            # Fetch all cart items for the customer (all stores)
+            all_carts = list(db['Carts'].find({"customer_id": customer_id}))
+
+            response_data = []
+            for cart in all_carts:
+                response_data.append({
+                    "cart_id": str(cart["_id"]),
+                    "store_id": cart["store_id"],
+                    "products": cart["products"]
+                })
+
+            return JsonResponse({
+                "message": "Cart updated successfully.",
+                "total_amount": round(total_amount, 2),
+                "tax_amount": round(tax_amount, 2),
+                "total_amount_with_tax": round(total_amount_with_tax, 2),
+                "all_carts": response_data  # Returning all cart products for the customer
+            }, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
         
 
