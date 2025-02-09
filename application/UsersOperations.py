@@ -43,6 +43,7 @@ class UserOperations:
             print("Response to API:", response)  # Print the response
             return response
     
+
     def create_Cart(self, data, db):
         try:
             customer_id = data.get("customer_id")
@@ -52,10 +53,6 @@ class UserOperations:
             # Validate inputs
             if not customer_id or not store_id or not products:
                 return JsonResponse({"error": "Customer ID, Store ID, and Products are required."}, status=400)
-
-            # Validate store and customer IDs
-            if not customer_id or not store_id:
-                return JsonResponse({"error": "Invalid ID format for customer or store."}, status=400)
 
             # Verify customer existence
             customer = db['users'].find_one({"_id": ObjectId(customer_id)})
@@ -69,7 +66,8 @@ class UserOperations:
 
             # Validate and process each product
             processed_products = []
-            total_amount = 0 
+            total_amount = 0  
+
             for item in products:
                 product_id = item.get("product_id")
                 quantity = item.get("quantity", 1)
@@ -87,7 +85,6 @@ class UserOperations:
                 if stock < quantity:
                     return JsonResponse({"error": f"Insufficient stock for product_id: {product_id}"}, status=400)
 
-
                 product_total_price = product.get("price", 0) * quantity
                 total_amount += product_total_price
 
@@ -99,81 +96,68 @@ class UserOperations:
                     "product_name": product.get("product_name")
                 })
 
-            # Create cart entry
-            cart_data = {
-                "customer_id": customer_id,
-                "store_id": store_id,
-                "products": processed_products,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow()
-            }
-
+            # Tax Calculation
             tax_percentage = store.get("tax_percentage", 0)
             tax_amount = (total_amount * tax_percentage) / 100
             total_amount_with_tax = total_amount + tax_amount
 
+            # Check if cart already exists for the customer & store
             existing_cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
             if existing_cart:
                 existing_products = existing_cart.get("products", [])
                 if not isinstance(existing_products, list):
                     return JsonResponse({"error": "Invalid data format for products in the cart."}, status=500)
 
-                updated_products = []
+                # Convert existing products into a dictionary for quick lookup
+                existing_product_map = {p["product_id"]: p for p in existing_products}
+
+                # Update or add products
                 for processed_product in processed_products:
-                    # Ensure processed_product is a dictionary
-                    print(processed_products)
-                    print(processed_product)
-                    if not isinstance(processed_product, dict):
-                        return JsonResponse({"error": "Invalid data format for processed products."}, status=400)
+                    product_id = processed_product["product_id"]
+                    if product_id in existing_product_map:
+                        existing_product_map[product_id]["quantity"] = processed_product["quantity"]
+                    else:
+                        existing_product_map[product_id] = processed_product
 
-                    product_found = False
-                    for existing_product in existing_products:
-                        print(existing_products)
-                        if not isinstance(existing_product, dict):
-                            return JsonResponse({"error": "Invalid data format for products in the cart."}, status=500)
+                updated_products = list(existing_product_map.values())
 
-                        # Check if the product already exists in the cart
-                        if existing_product["product_id"] == processed_product["product_id"]:
-                            # Update the quantity
-                            existing_product["quantity"] += processed_product["quantity"]
-                            product_found = True
-                            break
-
-                    if not product_found:
-                        # Add the new product to the list
-                        existing_products.append(processed_product)
-
-                updated_products = existing_products
-
+                # Persist the update in MongoDB
                 db['Carts'].update_one(
                     {"_id": existing_cart["_id"]},
-                    {
-                        "$set": {
-                            "products": updated_products,
-                            "updated_at": datetime.utcnow()
-                        }
-                    }
+                    {"$set": {"products": updated_products, "updated_at": datetime.utcnow()}}
                 )
 
-                return JsonResponse({"message": "Cart updated successfully.", 
-                                     "total_amount": round(total_amount, 2),
-                                    "tax_amount": round(tax_amount, 2),
-                                    "total_amount_with_tax": round(total_amount_with_tax, 2),
-                                    "products": updated_products}, status=200)
+                return JsonResponse({
+                    "message": "Cart updated successfully.",
+                    "cart_id": str(existing_cart["_id"]),
+                    "total_amount": round(total_amount, 2),
+                    "tax_amount": round(tax_amount, 2),
+                    "total_amount_with_tax": round(total_amount_with_tax, 2),
+                    "products": updated_products
+                }, status=200)
             else:
+                # Create new cart entry
+                cart_data = {
+                    "customer_id": customer_id,
+                    "store_id": store_id,
+                    "products": processed_products,
+                    "created_at": datetime.utcnow(),
+                    "updated_at": datetime.utcnow()
+                }
                 result = db['Carts'].insert_one(cart_data)
 
-            return JsonResponse({
-                "message": "Cart created successfully.",
-                 "total_amount": round(total_amount, 2),
-                "tax_amount": round(tax_amount, 2),
-                "total_amount_with_tax": round(total_amount_with_tax, 2),
-                "cart_id": str(result.inserted_id),
-                "products": processed_products
-            }, status=201)
+                return JsonResponse({
+                    "message": "Cart created successfully.",
+                    "cart_id": str(result.inserted_id),
+                    "total_amount": round(total_amount, 2),
+                    "tax_amount": round(tax_amount, 2),
+                    "total_amount_with_tax": round(total_amount_with_tax, 2),
+                    "products": processed_products
+                }, status=201)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
         
 
     def getCartProducts(self, data, db):
