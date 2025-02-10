@@ -531,7 +531,7 @@ class StoreOperation:
 
             formatted_stores = []
             user_id = data.get("user_id")
-
+            total_cart_products = 0 
             for store in stores:
                 store_id = str(store["_id"])
                 print("Checking store ID:", store_id)
@@ -540,9 +540,11 @@ class StoreOperation:
                 products = list(db['Products'].find({"store_id": store_id, "isPublish": True}))
 
                 cart_products = {}
+               
                 if user_id:
                     cart = db['Carts'].find_one({"customer_id": user_id, "store_id": store_id})
                     if cart:
+                        total_cart_products = total_cart_products + len(cart.get("products", []))
                         for item in cart.get("products", []):
                             cart_products[item["product_id"]] = {
                                 "isAddToCart": True,
@@ -584,7 +586,9 @@ class StoreOperation:
             return JsonResponse({
                 "stores": formatted_stores[:limit],  # Ensure only 20 stores are returned
                 "page": page,
-                "total_stores": len(formatted_stores)
+                "total_stores": len(formatted_stores),
+                "total_cart_products": total_cart_products,
+
             }, status=200)
 
         except Exception as e:
