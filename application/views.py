@@ -134,7 +134,7 @@ class ProductViewSet(ViewSet):
             data = request.data
 
             # Skip token verification for customers
-            if data.get("userType") != "Customer":
+            if data.get("userType", "").lower() != "customer":
                 token_response = self.verify_token(request=request)
                 if isinstance(token_response, JsonResponse):
                     return token_response
