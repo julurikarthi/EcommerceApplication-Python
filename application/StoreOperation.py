@@ -530,13 +530,32 @@ class StoreOperation:
                 stores = list(db['Stores'].find(query))
 
             formatted_stores = []
-            
+            user_id = data.get("user_id")
+
             for store in stores:
                 store_id = str(store["_id"])
                 print("Checking store ID:", store_id)
 
                 # Get only published products for this store
                 products = list(db['Products'].find({"store_id": store_id, "isPublish": True}))
+
+                cart_products = {}
+                if user_id:
+                    cart = db['Carts'].find_one({"customer_id": user_id, "store_id": store_id})
+                    if cart:
+                        for item in cart.get("products", []):
+                            cart_products[item["product_id"]] = {
+                                "isAddToCart": True,
+                                "quantity": item.get("quantity", 1)
+                            }
+                for product in products:
+                    product_id = str(product["_id"])
+                    if product_id in cart_products:
+                        product["isAddToCart"] = cart_products[product_id]["isAddToCart"]
+                        product["quantity"] = cart_products[product_id]["quantity"]
+                    else:
+                        product["isAddToCart"] = False
+                        product["quantity"] = 0
 
                 # Only include stores that have published products
                 if products:
