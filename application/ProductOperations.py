@@ -183,13 +183,12 @@ class ProductOperations:
 
     def getAllPublishedProducts(self, data, db=None):
         try:
-            # Ensure the database connection is provided
             if db is None:
                 raise ValueError("Database connection is required.")
 
-            # Query to filter products by store_id and isPublish
             query = {"isPublish": True}  # Only fetch published products
             store_id = data.get("store_id")
+            user_id = data.get("user_id")  # Fetch user_id if available
             
             if store_id:
                 if not ObjectId.is_valid(store_id):
@@ -197,23 +196,35 @@ class ProductOperations:
                 query["store_id"] = store_id
 
             category_id = data.get("category_id")
-            print(category_id)
             if category_id:
-                 query["category_id"] = category_id
+                query["category_id"] = category_id
 
-            # Pagination logic
             page = int(data.get("page", 1))  # Default to page 1 if not provided
             limit = 30
             skip = (page - 1) * limit
 
-            # Fetch paginated products from the database
+            # Fetch published products
             products = list(db['Products'].find(query).skip(skip).limit(limit))
 
-            # Format the products for JSON serialization
+            # Initialize cart products dictionary
+            cart_products = {}
+
+            # If user_id is provided, fetch cart data
+            if user_id:
+                cart = db['Carts'].find_one({"customer_id": user_id, "store_id": store_id})
+                if cart:
+                    for item in cart.get("products", []):
+                        cart_products[item["product_id"]] = {
+                            "isAddToCart": True,
+                            "quantity": item.get("quantity", 1)
+                        }
+
+            # Format products with cart details
             formatted_products = []
             for product in products:
+                product_id = str(product["_id"])
                 formatted_products.append({
-                    "product_id": str(product["_id"]),
+                    "product_id": product_id,
                     "store_id": str(product["store_id"]),
                     "product_name": product.get("product_name"),
                     "price": product.get("price"),
@@ -224,13 +235,15 @@ class ProductOperations:
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
                     "updated_at": product.get("updated_at", None),
+                    "isAddToCart": cart_products.get(product_id, {}).get("isAddToCart", False),  # ✅ Check if product is in cart
+                    "quantity": cart_products.get(product_id, {}).get("quantity", 0)  # ✅ Set quantity if in cart
                 })
 
-            # Return the list of published products
             return JsonResponse({"products": formatted_products}, status=200)
 
         except Exception as e:
-            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+                return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
         
 
     def deleteProduct(self, data, db=None):
