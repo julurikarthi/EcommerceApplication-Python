@@ -397,6 +397,21 @@ class ProductViewSet(ViewSet):
             return JsonResponse({"error": str(e)}, status=500)
         
     @action(detail=False, methods=['post'])
+    def getproductDetails(self, request):
+        try:
+            data = request.data
+            if data.get("userType", "").lower() != "customer":
+                token_response = self.verify_token(request=request)
+                if isinstance(token_response, JsonResponse):
+                    return token_response
+          
+            db = self.getDatabase()
+            product_operations = ProductOperations()
+            return product_operations.get_productDetails(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
     def getAllPublishedProducts(self, request):
         try:
             data = request.data

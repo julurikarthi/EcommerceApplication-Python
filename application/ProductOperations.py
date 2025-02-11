@@ -273,6 +273,61 @@ class ProductOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+
+    def get_productDetails(self, data=None, db=None):
+        try:
+            if db is None:
+                raise ValueError("Database connection is required.")
+            if data is None:
+                return JsonResponse({"error": "Request data is required."}, status=400)
+
+            product_id = data.get("product_id")
+            store_id = data.get("store_id")
+            user_id = data.get("user_id")  # Optional
+
+            if not product_id or not ObjectId.is_valid(product_id):
+                return JsonResponse({"error": "Invalid or missing product_id."}, status=400)
+
+            product = db['Products'].find_one({"_id": ObjectId(product_id)})
+            if not product:
+                return JsonResponse({"error": "Product not found."}, status=404)
+
+            # Cart logic: Check if the product is in the user's cart
+            cart_products = {}
+            if user_id and store_id:
+                cart = db['Carts'].find_one({"customer_id": user_id, "store_id": store_id})
+                if cart:
+                    for item in cart.get("products", []):
+                        cart_products[item["product_id"]] = {
+                            "isAddToCart": True,
+                            "quantity": item.get("quantity", 1)
+                        }
+
+            product_details = {
+                "product_id": str(product["_id"]),
+                "store_id": str(product["store_id"]),
+                "product_name": product.get("product_name"),
+                "price": product.get("price"),
+                "stock": product.get("stock"),
+                "imageids": product.get("imageids"),
+                "isPublish": product.get("isPublish"),
+                "category_id": product.get("category_id"),
+                "description": product.get("description", ""),
+                "created_at": product.get("created_at"),
+                "updated_at": product.get("updated_at"),
+                "isAddToCart": cart_products.get(product_id, {}).get("isAddToCart", False),
+                "cart_quantity": cart_products.get(product_id, {}).get("quantity", 0)
+            }
+
+            return JsonResponse({"product": product_details}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
+
 
 
 
