@@ -318,7 +318,7 @@ class ProductOperations:
                 "created_at": product.get("created_at"),
                 "updated_at": product.get("updated_at"),
                 "isAddToCart": cart_products.get(product_id, {}).get("isAddToCart", False),
-                "cart_quantity": cart_products.get(product_id, {}).get("quantity", 0)
+                "quantity": cart_products.get(product_id, {}).get("quantity", 0)
             }
 
             return JsonResponse({"product": product_details}, status=200)
