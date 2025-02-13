@@ -93,6 +93,7 @@ class UserOperations:
                     "product_id": product_id,
                     "quantity": quantity,
                     "price": product.get("price"),
+                    "imageids": product.get("imageids"),
                     "product_name": product.get("product_name")
                 })
 
@@ -162,8 +163,6 @@ class UserOperations:
 
 
         
-
-
     def getCartProducts(self, data, db):
         try:
             # Validate customer_id
