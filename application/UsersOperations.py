@@ -94,6 +94,7 @@ class UserOperations:
                     "quantity": quantity,
                     "price": product.get("price"),
                     "imageids": product.get("imageids"),
+                    "store_id": product.get("store_id"),
                     "product_name": product.get("product_name")
                 })
 
