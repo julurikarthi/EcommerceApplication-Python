@@ -163,10 +163,11 @@ class UserOperations:
 
         
 
+
     def getCartProducts(self, data, db):
         try:
             # Validate customer_id
-            customer_id = data["customer_id"]
+            customer_id = data.get("customer_id")
             if not customer_id:
                 return JsonResponse({"error": "Invalid customer_id."}, status=400)
 
@@ -175,22 +176,42 @@ class UserOperations:
             if not carts:
                 return JsonResponse({"error": "No carts found for the given customer_id."}, status=200)
 
-            # Extract cart details and enrich with store information
+            # Cache for store details to avoid redundant DB calls
+            store_cache = {}
+
             cart_list = []
             for cart in carts:
-                store_id = cart["store_id"]
+                store_id = cart.get("store_id")
+                
+                # Fetch store details (cache to prevent redundant queries)
+                if store_id and store_id not in store_cache:
+                    store = db['Stores'].find_one({"_id": ObjectId(store_id)})
+                    store_cache[store_id] = {
+                        "store_name": store.get("store_name") if store else "Unknown Store",
+                        "store_image": store.get("image_id") if store else None,
+                        "tax_percentage": store.get("tax_percentage", 0)  # Default to 0% if missing
+                    }
+                
+                store_details = store_cache.get(store_id, {"store_name": "Unknown Store", "store_image": None, "tax_percentage": 0})
+                tax_percentage = store_details["tax_percentage"] / 100  # Convert to decimal
 
-                # Query the 'Stores' collection for store details
-                store = db['Stores'].find_one({"_id": ObjectId(store_id)})
-                store_name = store.get("store_name") if store else "Unknown Store"
-                store_image = store.get("image_id") if store else None
+                # Calculate cart total
+                total_amount = sum(
+                    (product.get("price", 0) * product.get("quantity", 1))
+                    for product in cart.get("products", [])
+                )
+                tax_amount = round(total_amount * tax_percentage, 2)
+                total_amount_with_tax = round(total_amount + tax_amount, 2)
 
                 cart_list.append({
                     "cart_id": str(cart["_id"]),
                     "store_id": store_id,
-                    "store_name": store_name,
-                    "store_image": store_image,
+                    "store_name": store_details["store_name"],
+                    "store_image": store_details["store_image"],
                     "products": cart.get("products", []),
+                    "total_amount": total_amount,
+                    "tax_amount": tax_amount,
+                    "total_amount_with_tax": total_amount_with_tax,
                     "created_at": cart.get("created_at"),
                     "updated_at": cart.get("updated_at")
                 })
@@ -199,6 +220,7 @@ class UserOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
 
     
