@@ -145,10 +145,17 @@ class UserOperations:
 
             response_data = []
             for cart in all_carts:
+                carttotal_amount = sum(product["price"] * product["quantity"] for product in cart["products"])
+                carttax_percentage = store.get("tax_percentage", 0)
+                carttax_amount = round((carttotal_amount * carttax_percentage) / 100, 2)
+                carttotal_amount_with_tax = round(carttotal_amount + carttax_amount, 2)
                 response_data.append({
                     "cart_id": str(cart["_id"]),
                     "store_id": cart["store_id"],
-                    "products": cart["products"]
+                    "products": cart["products"],
+                    "total_amount": round(carttotal_amount, 2),
+                    "tax_amount": round(carttax_amount, 2),
+                    "total_amount_with_tax": round(carttotal_amount_with_tax, 2)
                 })
 
             return JsonResponse({
