@@ -189,13 +189,13 @@ class UserOperations:
                 # Fetch store details (cache to prevent redundant queries)
                 if store_id and store_id not in store_cache:
                     store = db['Stores'].find_one(
-                        {"_id": ObjectId(store_id)},
-                        {"store_name": 1, "image_id": 1, "tax_percentage": 1}  # Fetch only required fields
+                        {"_id": ObjectId(store_id)}  # Fetch only required fields
                     )
                     store_cache[store_id] = {
                         "store_name": store.get("store_name") if store else "Unknown Store",
                         "store_image": store.get("image_id") if store else None,
-                        "tax_percentage": store.get("tax_percentage", 0)  # Default to 0% if missing
+                        "tax_percentage": store.get("tax_percentage", 0),
+                        "serviceType":  store.get("serviceType", [])
                     }
 
                 store_details = store_cache.get(store_id, {"store_name": "Unknown Store", "store_image": None, "tax_percentage": 0})
@@ -208,12 +208,13 @@ class UserOperations:
                 )
                 tax_amount = round(total_amount * tax_percentage, 2)
                 total_amount_with_tax = round(total_amount + tax_amount, 2)
-
+                
                 cart_list.append({
                     "cart_id": str(cart["_id"]),
                     "store_id": store_id,
                     "store_name": store_details["store_name"],
                     "store_image": store_details["store_image"],
+                    "serviceType": store_details["serviceType"],
                     "products": products,
                     "total_amount": total_amount,
                     "tax_amount": tax_amount,
