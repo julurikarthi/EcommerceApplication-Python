@@ -51,6 +51,7 @@ class OrdersOperations:
             store = db['Stores'].find_one({"_id": ObjectId(store_id)})
             if not store:
                 return JsonResponse({"error": "Store not found."}, status=400)
+            store_address = f"{store.get('street', '')}, {store.get('city', '')}, {store.get('state', '')} {store.get('pincode', '')}"
 
             # Fetch the cart for the customer
             cart = db['Carts'].find_one({"customer_id": customer_id, "store_id": store_id})
@@ -100,6 +101,7 @@ class OrdersOperations:
                 "tax_amount": tax_amount,
                 "total_price_with_tax": total_price_with_tax,
                 "payment_type": payment_type,
+                "store_address": store_address,
                 "payment_confirmation": payment_confirmation if payment_type in ["Pickup", "Delivery"] else None,
                 "delivery_address": delivery_address if payment_type == "Delivery" else None,
                 "status": "Pending",  # Initial status
@@ -120,6 +122,7 @@ class OrdersOperations:
                     "tax_amount": tax_amount,
                     "total_price_with_tax": total_price_with_tax,
                     "products": order_items,
+                    "store_address": store_address,
                     "status": "Pending"
                 },
                 status=201,
