@@ -202,7 +202,8 @@ class UserOperations:
                         "store_name": store.get("store_name") if store else "Unknown Store",
                         "store_image": store.get("image_id") if store else None,
                         "tax_percentage": store.get("tax_percentage", 0),
-                        "serviceType":  store.get("serviceType", [])
+                        "serviceType":  store.get("serviceType", []),
+                        "address": f"{store.get('street', '')}, {store.get('city', '')}, {store.get('state', '')} {store.get('pincode', '')}"
                     }
 
                 store_details = store_cache.get(store_id, {"store_name": "Unknown Store", "store_image": None, "tax_percentage": 0})
@@ -225,6 +226,7 @@ class UserOperations:
                     "products": products,
                     "total_amount": total_amount,
                     "tax_amount": tax_amount,
+                    "store_address": store_details["address"],
                     "total_amount_with_tax": total_amount_with_tax,
                     "created_at": cart.get("created_at"),
                     "updated_at": cart.get("updated_at")
