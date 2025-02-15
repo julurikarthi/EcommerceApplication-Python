@@ -376,6 +376,7 @@ class OrdersOperations:
 
             # Cache for store details to avoid redundant DB calls
             store_cache = {}
+            product_cache = {}
 
             # Format response
             response = []
@@ -388,19 +389,40 @@ class OrdersOperations:
                     if store:
                         # Construct full address
                         store_address = f"{store.get('street', '')}, {store.get('city', '')}, {store.get('state', '')} {store.get('pincode', '')}".strip(", ")
+                        store_image = store.get("image_id", None)  # Fetch store image
                     else:
                         store_address = "Unknown Address"
+                        store_image = None
 
-                    store_cache[store_id] = store_address
+                    store_cache[store_id] = {"address": store_address, "image_id": store_image}
 
-                store_address = store_cache.get(store_id, "Unknown Address")
+                store_details = store_cache.get(store_id, {"address": "Unknown Address", "image_id": None})
+
+                # Fetch products and include image_id
+                products_with_images = []
+                for product in order["products"]:
+                    product_id = product.get("product_id")
+
+                    # Fetch product details only if not cached
+                    if product_id and product_id not in product_cache:
+                        product_data = db['Products'].find_one({"_id": ObjectId(product_id)})
+                        product_cache[product_id] = product_data.get("image_id") if product_data else None
+
+                    products_with_images.append({
+                        "product_id": product_id,
+                        "product_name": product.get("product_name"),
+                        "quantity": product.get("quantity"),
+                        "price": product.get("price"),
+                        "image_id": product_cache.get(product_id, None)
+                    })
 
                 response.append({
                     "order_id": str(order["_id"]),
                     "store_id": store_id,
                     "store_name": order["store_name"],
-                    "store_address": store_address,
-                    "products": order["products"],
+                    "store_address": store_details["address"],
+                    "store_image": store_details["image_id"],  # Store image added
+                    "products": products_with_images,
                     "total_price": round(order["total_price"], 2),
                     "tax_amount": round(order["tax_amount"], 2),
                     "total_price_with_tax": round(order["total_price_with_tax"], 2),
@@ -413,4 +435,6 @@ class OrdersOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
 
