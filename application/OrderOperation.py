@@ -123,6 +123,8 @@ class OrdersOperations:
                     "total_price_with_tax": total_price_with_tax,
                     "products": order_items,
                     "store_address": store_address,
+                    "payment_confirmation": payment_confirmation if payment_type in ["Pickup", "Delivery"] else None,
+                    "delivery_address": delivery_address if payment_type == "Delivery" else None,
                     "status": "Pending"
                 },
                 status=201,
