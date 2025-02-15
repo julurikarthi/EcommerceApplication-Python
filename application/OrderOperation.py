@@ -360,39 +360,57 @@ class OrdersOperations:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
 
 
-        
-    
     def getOrders_ForCustomer(self, data, db):
-            try:
-                # Extract customer ID
-                customer_id = data.get("customer_id")
-                
-                # Validate input
-                if not customer_id:
-                    return JsonResponse({"error": "Customer ID is required."}, status=400)
-                
-                # Fetch orders for the customer
-                orders = list(db['Orders'].find({"customer_id": customer_id}))
-                if not orders:
-                    return JsonResponse({"message": "No orders found for this customer."}, status=404)
-                
-                # Format response
-                response = []
-                for order in orders:
-                    response.append({
-                        "order_id": str(order["_id"]),
-                        "store_id": order["store_id"],
-                        "store_name": order["store_name"],
-                        "products": order["products"],
-                        "total_price": round(order["total_price"], 2),
-                        "tax_amount": round(order["tax_amount"], 2),
-                        "total_price_with_tax": round(order["total_price_with_tax"], 2),
-                        "status": order["status"],
-                        "payment_type": order["payment_type"],
-                        "created_at": order["created_at"].isoformat()
-                    })
-                
-                return JsonResponse({"success": True, "orders": response}, status=200)
-            
-            except Exception as e:
-                return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        try:
+            # Extract customer ID
+            customer_id = data.get("customer_id")
+
+            # Validate input
+            if not customer_id:
+                return JsonResponse({"error": "Customer ID is required."}, status=400)
+
+            # Fetch orders for the customer
+            orders = list(db['Orders'].find({"customer_id": customer_id}))
+            if not orders:
+                return JsonResponse({"message": "No orders found for this customer."}, status=404)
+
+            # Cache for store details to avoid redundant DB calls
+            store_cache = {}
+
+            # Format response
+            response = []
+            for order in orders:
+                store_id = order["store_id"]
+
+                # Fetch store details (cache to prevent redundant queries)
+                if store_id and store_id not in store_cache:
+                    store = db['Stores'].find_one({"_id": ObjectId(store_id)})
+                    if store:
+                        # Construct full address
+                        store_address = f"{store.get('street', '')}, {store.get('city', '')}, {store.get('state', '')} {store.get('pincode', '')}".strip(", ")
+                    else:
+                        store_address = "Unknown Address"
+
+                    store_cache[store_id] = store_address
+
+                store_address = store_cache.get(store_id, "Unknown Address")
+
+                response.append({
+                    "order_id": str(order["_id"]),
+                    "store_id": store_id,
+                    "store_name": order["store_name"],
+                    "store_address": store_address,
+                    "products": order["products"],
+                    "total_price": round(order["total_price"], 2),
+                    "tax_amount": round(order["tax_amount"], 2),
+                    "total_price_with_tax": round(order["total_price_with_tax"], 2),
+                    "status": order["status"],
+                    "payment_type": order["payment_type"],
+                    "created_at": order["created_at"].isoformat()
+                })
+
+            return JsonResponse({"success": True, "orders": response}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
