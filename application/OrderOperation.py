@@ -406,14 +406,14 @@ class OrdersOperations:
                     # Fetch product details only if not cached
                     if product_id and product_id not in product_cache:
                         product_data = db['Products'].find_one({"_id": ObjectId(product_id)})
-                        product_cache[product_id] = product_data.get("image_id") if product_data else None
+                        product_cache[product_id] = product_data.get("imageids") if product_data else None
 
                     products_with_images.append({
                         "product_id": product_id,
                         "product_name": product.get("product_name"),
                         "quantity": product.get("quantity"),
                         "price": product.get("price"),
-                        "image_id": product_cache.get(product_id, None)
+                        "imageids": product_cache.get(product_id, None)
                     })
 
                 response.append({
