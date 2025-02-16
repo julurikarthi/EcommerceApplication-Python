@@ -8,68 +8,83 @@ class ProductOperations:
     def create_product(self, data, db):
         """
         Creates a new product in the database after validating the store_id and category_id.
+        Supports product variants with different prices and stock levels.
         """
         try:
             # Extract required fields from data
             name = data.get("product_name")
             description = data.get("description")
-            price = data.get("price")
-            stock = data.get("stock")
-            imageIds = data.get("imageids",[])
+            imageIds = data.get("imageids", [])
             store_id = data.get("store_id")
             category_id = data.get("category_id")
             store_type = data.get("store_type")
             isPublish = data.get("isPublish", True)  # New field for category association
-            
+            variants = data.get("variants", [])  # Expecting a list of variants
+
             # Validate required fields
-            if not all([name, description, price, stock, store_id, category_id, imageIds, store_type]):
-                return JsonResponse({"error": "All fields (product_name, description, price, stock, store_id, category_id, imageIds, store_type) are required."}, status=400)
-            
-            # Validate price and stock
-            if not isinstance(price, (int, float)) or price <= 0:
-                return JsonResponse({"error": "Price must be a positive number."}, status=400)
-            if not isinstance(stock, int) or stock < 0:
-                return JsonResponse({"error": "Stock must be a non-negative integer."}, status=400)
-            
+            if not all([name, description, store_id, category_id, imageIds, store_type]):
+                return JsonResponse(
+                    {"error": "All fields (product_name, description, store_id, category_id, imageIds, store_type) are required."},
+                    status=400,
+                )
+
             # Check if the store_id exists in the Stores collection
-            store = db['Stores'].find_one({"_id": ObjectId(store_id)})
+            store = db["Stores"].find_one({"_id": ObjectId(store_id)})
             if not store:
                 return JsonResponse({"error": "Invalid store_id. No store found with this ID."}, status=400)
-            
+
             # Check if the category_id exists in the Categories collection and belongs to the specified store
-            category = db['Categories'].find_one({"_id": ObjectId(category_id), "store_id": store_id})
+            category = db["Categories"].find_one({"_id": ObjectId(category_id), "store_id": store_id})
             if not category:
-                return JsonResponse({"error": "Invalid category_id. The category does not exist or does not belong to the specified store."}, status=400)
-            
+                return JsonResponse(
+                    {"error": "Invalid category_id. The category does not exist or does not belong to the specified store."},
+                    status=400,
+                )
+
+            # Validate and format variants
+            formatted_variants = []
+            for variant in variants:
+                variant_type = variant.get("type")
+                price = variant.get("price")
+                stock = variant.get("stock")
+
+                if not variant_type or not isinstance(price, (int, float)) or price <= 0 or not isinstance(stock, int) or stock < 0:
+                    return JsonResponse({"error": "Each variant must have a valid type, price (positive number), and stock (non-negative integer)."}, status=400)
+
+                formatted_variants.append({
+                    "type": variant_type,
+                    "price": price,
+                    "stock": stock
+                })
+
             # Create product document
             product = {
                 "product_name": name,
                 "description": description,
-                "price": price,
-                "stock": stock,
                 "store_id": store_id,
                 "category_id": category_id,
                 "created_at": datetime.utcnow(),
                 "imageids": imageIds,
                 "isPublish": isPublish,
-                "store_type": store_type
+                "store_type": store_type,
+                "variants": formatted_variants  # Store variants inside product
             }
-            
+
             # Insert the product into the Products collection
-            result = db['Products'].insert_one(product)
-            
+            result = db["Products"].insert_one(product)
+
             # Return success response
             return JsonResponse({
                 "message": "Product created successfully.",
                 "product_id": str(result.inserted_id),
                 "store_id": store_id,
                 "category_id": category_id,
-                "category_name": category.get("category_name")  # Include category name for confirmation
+                "category_name": category.get("category_name"),  # Include category name for confirmation
+                "variants": formatted_variants  # Include variant details in response
             }, status=201)
-        
+
         except Exception as e:
             return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
-   
 
 
     def updateProduct(self, data, db):
