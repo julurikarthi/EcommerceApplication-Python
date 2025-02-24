@@ -349,6 +349,7 @@ class ProductOperations:
                 "description": product.get("description", ""),
                 "created_at": product.get("created_at"),
                 "updated_at": product.get("updated_at"),
+                "variants": product.get("variants", []),
                 "isAddToCart": cart_products.get(product_id, {}).get("isAddToCart", False),
                 "quantity": cart_products.get(product_id, {}).get("quantity", 0)
             }
