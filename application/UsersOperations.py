@@ -44,11 +44,13 @@ class UserOperations:
             return response
     
 
+
+
     def create_Cart(self, data, db):
         try:
             customer_id = data.get("customer_id")
             store_id = data.get("store_id")
-            products = data.get("products", [])  # List of {product_id, quantity}
+            products = data.get("products", [])  # List of {product_id, variant_type, quantity}
 
             # Validate inputs
             if not customer_id or not store_id or not products:
@@ -70,6 +72,7 @@ class UserOperations:
 
             for item in products:
                 product_id = item.get("product_id")
+                variant_type = item.get("variant_type")  # New: Get selected variant
                 quantity = item.get("quantity", 1)
 
                 if not product_id:
@@ -80,19 +83,35 @@ class UserOperations:
                 if not product:
                     return JsonResponse({"error": f"Product not found for ID: {product_id}"}, status=400)
 
-                # Check stock availability
-                stock = product.get("stock", 0)
-                if stock < quantity:
-                    return JsonResponse({"error": f"Insufficient stock for product_id: {product_id}"}, status=400)
+                # Check if the product has variants
+                selected_variant = None
+                if "variants" in product and product["variants"]:
+                    for variant in product["variants"]:
+                        if variant["variant_type"] == variant_type:
+                            selected_variant = variant
+                            break
 
-                product_total_price = product.get("price", 0) * quantity
+                # Determine price and stock based on whether a variant was selected
+                if selected_variant:
+                    price = selected_variant["price"]
+                    stock = selected_variant["stock"]
+                else:
+                    price = product.get("price", 0)
+                    stock = product.get("stock", 0)
+
+                # Check stock availability
+                if stock < quantity:
+                    return JsonResponse({"error": f"Insufficient stock for product_id: {product_id}, variant: {variant_type}"}, status=400)
+
+                product_total_price = price * quantity
                 total_amount += product_total_price
 
                 # Add product to processed list
                 processed_products.append({
                     "product_id": product_id,
+                    "variant_type": variant_type if selected_variant else None,  # Store selected variant
                     "quantity": quantity,
-                    "price": product.get("price"),
+                    "price": price,
                     "imageids": product.get("imageids"),
                     "store_id": product.get("store_id"),
                     "product_name": product.get("product_name")
@@ -111,16 +130,15 @@ class UserOperations:
                     return JsonResponse({"error": "Invalid data format for products in the cart."}, status=500)
 
                 # Convert existing products into a dictionary for quick lookup
-                existing_product_map = {p["product_id"]: p for p in existing_products}
+                existing_product_map = {(p["product_id"], p.get("variant_type")): p for p in existing_products}
 
                 # Update or add products (Replace quantity instead of adding)
                 for processed_product in processed_products:
-                    product_id = processed_product["product_id"]
+                    product_key = (processed_product["product_id"], processed_product["variant_type"])
                     if processed_product['quantity'] > 0:
-                        existing_product_map[product_id] = processed_product 
+                        existing_product_map[product_key] = processed_product 
                     else:
-                        existing_product_map.pop(product_id, None)
-
+                        existing_product_map.pop(product_key, None)
 
                 updated_products = list(existing_product_map.values())
 
@@ -168,6 +186,7 @@ class UserOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
 
     def getCartProducts(self, data, db):
