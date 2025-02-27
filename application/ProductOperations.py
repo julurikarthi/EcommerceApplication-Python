@@ -204,7 +204,8 @@ class ProductOperations:
                     "description": product.get("description", ""),
                     "created_at": product.get("created_at", None),
                     "updated_at": product.get("updated_at", None),
-                    "variants": product.get("variants", [])
+                    "variants": product.get("variants", []),
+                    "search_tags": product.get("search_tags", [])
                 })
 
             # Return the list of products
@@ -270,7 +271,8 @@ class ProductOperations:
                     "updated_at": product.get("updated_at", None),
                     "isAddToCart": cart_products.get(product_id, {}).get("isAddToCart", False),  # ✅ Check if product is in cart
                     "quantity": cart_products.get(product_id, {}).get("quantity", 0),  # ✅ Set quantity if in cart
-                    "variants": product.get("variants", [])
+                    "variants": product.get("variants", []),
+                    "search_tags": product.get("search_tags", [])
                 })
 
             return JsonResponse({"products": formatted_products}, status=200)
