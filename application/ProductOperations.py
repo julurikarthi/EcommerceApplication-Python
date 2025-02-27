@@ -74,7 +74,6 @@ class ProductOperations:
             product = {
                 "product_name": name,
                 "description": description,
-                "price": price,
                 "stock": stock,
                 "store_id": store_id,
                 "category_id": category_id,
@@ -85,6 +84,9 @@ class ProductOperations:
                 "search_tags": search_tags,
                 "variants": formatted_variants  # Store variants array
             }
+
+            if not formatted_variants:
+                product["price"] = price
 
             # Insert the product into the Products collection
             result = db['Products'].insert_one(product)
