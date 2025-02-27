@@ -115,48 +115,85 @@ class ProductOperations:
             description = data.get('description', '')
             isPublish = data.get("isPublish", True)
             imageIds = data.get("imageids")
-            # Ensure the product_id and store_id are valid ObjectId types
+            search_tags = data.get("search_tags", [])
+            variants = data.get("variants", [])
+
+            # Ensure valid ObjectId format
             if not ObjectId.is_valid(store_id):
                 return JsonResponse({"error": "Invalid store_id format."}, status=400)
             if not ObjectId.is_valid(product_id):
                 return JsonResponse({"error": "Invalid product_id format."}, status=400)
 
-            # Check if the store exists in the 'Stores' collection
+            # Check if store exists
             store = db['Stores'].find_one({"_id": ObjectId(store_id)})
             if not store:
                 return JsonResponse({"error": "Invalid store_id. No store found with this ID."}, status=400)
 
-            # Check if the product exists in the 'Products' collection for the given store
+            # Check if product exists
             product = db['Products'].find_one({"_id": ObjectId(product_id), "store_id": store_id})
             if not product:
                 return JsonResponse({"error": "Product not found for the given store."}, status=404)
 
-            # Prepare the data to be updated
+            # Prepare update data
             updated_data = {}
             if product_name:
                 updated_data["product_name"] = product_name
-            if price is not None:  # Ensure price is not None
-                updated_data["price"] = price
             if description:
                 updated_data["description"] = description
-            if stock:
+            if stock is not None:
                 updated_data["stock"] = stock
-            if isPublish:
+            if isPublish is not None:
                 updated_data["isPublish"] = isPublish
             if imageIds:
                 updated_data["imageids"] = imageIds
 
-            # Update the product in the 'Products' collection
+            # Variants Processing
+            formatted_variants = []
+            if variants:
+                for variant in variants:
+                    variant_type = variant.get("variant_type")
+                    variant_price = variant.get("price")
+                    variant_stock = variant.get("stock")
+
+                    if not variant_type or not isinstance(variant_price, (int, float)) or variant_price <= 0:
+                        return JsonResponse({"error": "Each variant must have a valid variant_type and price."}, status=400)
+                    if not isinstance(variant_stock, int) or variant_stock < 0:
+                        return JsonResponse({"error": "Each variant must have a non-negative stock value."}, status=400)
+
+                    formatted_variants.append({
+                        "variant_type": variant_type,
+                        "price": variant_price,
+                        "stock": variant_stock
+                    })
+
+                updated_data["variants"] = formatted_variants
+            else:
+                # If no variants, allow price update
+                if price is not None:
+                    updated_data["price"] = price
+
+            # Search Tags Processing
+            if search_tags:
+                updated_data["search_tags"] = list(set(tag.strip().lower() for tag in search_tags))
+            else:
+                auto_tags = [product_name.lower()] + description.lower().split()[:5]
+                updated_data["search_tags"] = list(set(auto_tags))
+
+            # Update the product in the database
             result = db['Products'].update_one({"_id": ObjectId(product_id)}, {"$set": updated_data})
 
-            # Check if any document was updated
+            # Check if the update was successful
             if result.modified_count == 0:
                 return JsonResponse({"error": "No changes made to the product."}, status=400)
 
-            return JsonResponse({"message": "Product updated successfully! "}, status=200)
+            return JsonResponse({
+                "message": "Product updated successfully!",
+                "updated_fields": updated_data
+            }, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
     
 
     def getAllProducts(self, data, db=None):
