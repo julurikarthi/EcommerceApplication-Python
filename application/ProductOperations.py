@@ -367,17 +367,17 @@ class ProductOperations:
             if not product:
                 return JsonResponse({"error": "Product not found."}, status=404)
 
-            # Cart logic: Check if the product is in the user's cart
-            cart_products = {}
+            # Cart logic: Track quantity for each variant
+            variant_cart_quantities = {}
             if user_id and store_id:
                 cart = db['Carts'].find_one({"customer_id": user_id, "store_id": store_id})
                 if cart:
                     for item in cart.get("products", []):
-                        cart_products[item["product_id"]] = {
-                            "isAddToCart": True,
-                            "quantity": item.get("quantity", 1)
-                        }
+                        if item["product_id"] == product_id:
+                            variant_type = item.get("variant_type")
+                            variant_cart_quantities[variant_type] = item.get("quantity", 1)
 
+            # Prepare product details response
             product_details = {
                 "product_id": str(product["_id"]),
                 "store_id": str(product["store_id"]),
@@ -390,15 +390,22 @@ class ProductOperations:
                 "description": product.get("description", ""),
                 "created_at": product.get("created_at"),
                 "updated_at": product.get("updated_at"),
-                "variants": product.get("variants", []),
-                "isAddToCart": cart_products.get(product_id, {}).get("isAddToCart", False),
-                "quantity": cart_products.get(product_id, {}).get("quantity", 0)
+                "variants": [],
+                "isAddToCart": bool(variant_cart_quantities),  # True if any variant is in cart
+                "quantity": sum(variant_cart_quantities.values())  # Total quantity of all variants
             }
+
+            # Update variants list with cart quantities
+            for variant in product.get("variants", []):
+                variant_type = variant.get("variant_type")
+                variant["cart_quantity"] = variant_cart_quantities.get(variant_type, 0)
+                product_details["variants"].append(variant)
 
             return JsonResponse({"product": product_details}, status=200)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
 
 
