@@ -412,6 +412,83 @@ class ProductOperations:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+
+    def get_all_categories(self):
+        return {
+            "Groceries": {
+                "Fresh Produce": [
+                    "Fruits", "Vegetables", "Herbs", "Salads", "Organic Produce"
+                ],
+                "Snacks & Beverages": [
+                    "Chips & Crisps", "Chocolates & Candies", "Nuts & Seeds",
+                    "Soft Drinks", "Energy Drinks", "Tea & Coffee"
+                ],
+                "Dairy & Eggs": [
+                    "Milk", "Cheese", "Yogurt", "Butter & Margarine", "Eggs"
+                ],
+                "Bakery & Confectionery": [
+                    "Bread", "Cakes", "Cookies", "Pastries", "Breakfast Cereals"
+                ],
+                "Organic & Health Foods": [
+                    "Gluten-Free Products", "Vegan Foods", "Protein Bars",
+                    "Superfoods", "Dietary Supplements"
+                ],
+                "Canned & Packaged Foods": [
+                    "Canned Vegetables", "Pasta & Noodles", "Sauces & Condiments",
+                    "Soups", "Ready-to-Eat Meals"
+                ],
+                "Frozen Foods": [
+                    "Frozen Vegetables", "Frozen Meals", "Ice Cream", "Frozen Snacks"
+                ],
+                "Beverages": [
+                    "Water", "Juices", "Alcoholic Beverages", "Non-Alcoholic Beverages"
+                ],
+                "Pantry Staples": [
+                    "Rice & Grains", "Flour", "Sugar", "Cooking Oil", "Spices & Seasonings"
+                ]
+            },
+            "Fashion & Apparel": {
+                "Men's Clothing": [
+                    "T-Shirts", "Shirts", "Jeans", "Suits & Blazers", "Jackets & Coats",
+                    "Shorts", "Activewear", "Underwear & Socks"
+                ],
+                "Women's Clothing": [
+                    "Dresses", "Tops", "Jeans", "Skirts", "Jackets & Coats",
+                    "Activewear", "Lingerie & Sleepwear"
+                ],
+                "Kids' Clothing": [
+                    "Boys' Clothing", "Girls' Clothing", "Baby Clothing",
+                    "School Uniforms", "Kids' Accessories"
+                ],
+                "Shoes": [
+                    "Men's Shoes", "Women's Shoes", "Kids' Shoes", "Sports Shoes",
+                    "Sandals & Flip-Flops", "Boots"
+                ],
+                "Accessories": [
+                    "Bags & Backpacks", "Watches", "Jewelry", "Sunglasses",
+                    "Belts", "Hats & Caps", "Scarves & Gloves"
+                ],
+                "Sportswear & Activewear": [
+                    "Men's Activewear", "Women's Activewear", "Kids' Activewear",
+                    "Gym Accessories", "Sports Shoes"
+                ],
+                "Lingerie & Sleepwear": [
+                    "Bras", "Panties", "Lingerie Sets", "Pajamas", "Robes"
+                ],
+                "Ethnic & Traditional Wear": [
+                    "Men's Ethnic Wear", "Women's Ethnic Wear", "Kids' Ethnic Wear",
+                    "Traditional Accessories"
+                ],
+                "Seasonal Wear": [
+                    "Winter Wear", "Summer Wear", "Rainwear"
+                ]
+            }
+        }
+
+
+
+
 
 
 

@@ -634,7 +634,15 @@ class ProductViewSet(ViewSet):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
     
-        
+    @action(detail=False, methods=['get'])
+    def getAllcategories(self, request):
+        try:
+            product_operations = ProductOperations()
+            categories = product_operations.get_all_categories()  # ✅ No request parameter needed
+            return Response({"categories": categories}, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+
 
     
             
