@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from datetime import datetime
 from bson import ObjectId 
-
+import uuid
 
 class ProductOperations:
 
@@ -13,7 +13,6 @@ class ProductOperations:
             # Extract required fields from data
             name = data.get("product_name")
             description = data.get("description")
-            price = data.get("price")
             stock = data.get("stock")
             imageIds = data.get("imageids", [])
             store_id = data.get("store_id")
@@ -24,43 +23,48 @@ class ProductOperations:
             variants = data.get("variants", [])  # New field for product variants
 
             # Validate required fields
-            if not all([name, description, price, stock, store_id, category_id, imageIds, store_type]):
-                return JsonResponse({"error": "All fields (product_name, description, price, stock, store_id, category_id, imageIds, store_type) are required."}, status=400)
+            if not all([name, description, stock, store_id, category_id, imageIds, store_type]):
+                return JsonResponse({"error": "Missing required fields."}, status=400)
 
-            # Validate price and stock
-            if not isinstance(price, (int, float)) or price <= 0:
-                return JsonResponse({"error": "Price must be a positive number."}, status=400)
+            # Validate stock
             if not isinstance(stock, int) or stock < 0:
                 return JsonResponse({"error": "Stock must be a non-negative integer."}, status=400)
 
-            # Validate variants (if provided)
+            # Validate variants
             formatted_variants = []
-            if variants:
-                for variant in variants:
-                    variant_type = variant.get("variant_type")
-                    variant_price = variant.get("price")
-                    variant_stock = variant.get("stock")
+            for variant in variants:
+                variant_type = variant.get("variant_type")
+                value = variant.get("value")
+                variant_price = variant.get("price")
+                variant_stock = variant.get("stock")
 
-                    if not variant_type or not isinstance(variant_price, (int, float)) or variant_price <= 0:
-                        return JsonResponse({"error": "Each variant must have a valid variant_type and price."}, status=400)
-                    if not isinstance(variant_stock, int) or variant_stock < 0:
-                        return JsonResponse({"error": "Each variant must have a non-negative stock value."}, status=400)
+                if not variant_type or not value:
+                    return JsonResponse({"error": "Each variant must have a variant_type and value."}, status=400)
+                if not isinstance(variant_price, (int, float)) or variant_price <= 0:
+                    return JsonResponse({"error": "Each variant must have a valid price."}, status=400)
+                if not isinstance(variant_stock, int) or variant_stock < 0:
+                    return JsonResponse({"error": "Each variant must have a non-negative stock value."}, status=400)
 
-                    formatted_variants.append({
-                        "variant_type": variant_type,
-                        "price": variant_price,
-                        "stock": variant_stock
-                    })
+                # Auto-generate unique variant_id
+                variant_id = str(uuid.uuid4())
 
-            # Check if the store_id exists
+                formatted_variants.append({
+                    "variant_id": variant_id,
+                    "variant_type": variant_type,
+                    "value": value,
+                    "price": variant_price,
+                    "stock": variant_stock
+                })
+
+            # Check if store_id exists
             store = db['Stores'].find_one({"_id": ObjectId(store_id)})
             if not store:
-                return JsonResponse({"error": "Invalid store_id. No store found with this ID."}, status=400)
+                return JsonResponse({"error": "Invalid store_id."}, status=400)
 
-            # Check if the category_id exists
+            # Check if category_id exists
             category = db['Categories'].find_one({"_id": ObjectId(category_id), "store_id": store_id})
             if not category:
-                return JsonResponse({"error": "Invalid category_id. The category does not exist or does not belong to the specified store."}, status=400)
+                return JsonResponse({"error": "Invalid category_id."}, status=400)
 
             # Auto-generate search tags if not provided
             if not search_tags:
@@ -82,13 +86,14 @@ class ProductOperations:
                 "isPublish": isPublish,
                 "store_type": store_type,
                 "search_tags": search_tags,
-                "variants": formatted_variants  # Store variants array
+                "variants": formatted_variants  # Store formatted variants
             }
 
+            # Only store price at product level if no variants exist
             if not formatted_variants:
-                product["price"] = price
+                product["price"] = data.get("price")
 
-            # Insert the product into the Products collection
+            # Insert product into the database
             result = db['Products'].insert_one(product)
 
             return JsonResponse({
@@ -98,11 +103,13 @@ class ProductOperations:
                 "category_id": category_id,
                 "category_name": category.get("category_name"),
                 "search_tags": search_tags,
-                "variants": formatted_variants  # Return added variants
+                "variants": formatted_variants  # Return generated variants
             }, status=201)
 
         except Exception as e:
             return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
+
+
 
     def updateProduct(self, data, db):
         try:
