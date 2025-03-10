@@ -263,6 +263,45 @@ class ProductViewSet(ViewSet):
         except Exception as e:
                 return Response({"error": str(e)}, status=500)
         
+    @action(detail=False, methods=['post'], url_path='uploadMultipleImages')
+    def uploadMultipleImages(self, request):
+        try:
+            store_operations = StoreOperation()
+            return store_operations.uploadMultipleImages(request=request)
+        except Exception as e:
+                    return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['get'], url_path='populateCategories')
+    def populateCategories(self, request):
+        try:
+            store_operations = StoreOperation()
+            db = self.getDatabase()
+            return store_operations.populateCategories(db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['get'], url_path='getAllCategories')
+    def getAllCategories(self, request):
+        try:
+            store_operations = StoreOperation()
+            db = self.getDatabase()
+            return store_operations.getAllCategories(db=db)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+    
+
+    @action(detail=False, methods=['post'], url_path='createChildCategory')
+    def createChildCategory(self, request):
+        try:
+            data = request.data
+            store_operations = StoreOperation()
+            db = self.getDatabase()
+            return store_operations.createChildCategory(db=db, data=data)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
+        
+
+
     @action(detail=False, methods=['post'], url_path='deleteImage')
     def delete_image(self, request):
         try:
@@ -446,6 +485,17 @@ class ProductViewSet(ViewSet):
             return store_operations.createCategory(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
+        
+    @action(detail=False, methods=['post'])
+    def createSubcategory(self, request):
+        try:
+            data = request.data
+            db = self.getDatabase()
+            store_operations = StoreOperation()
+            return store_operations.createSubcategory(data=data, db=db)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    
         
     @action(detail=False, methods=['post'])
     def createOffer(self, request):
@@ -633,15 +683,6 @@ class ProductViewSet(ViewSet):
             return order_operations.getOrders_ForCustomer(data=data, db=db)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-    
-    @action(detail=False, methods=['get'])
-    def getAllcategories(self, request):
-        try:
-            product_operations = ProductOperations()
-            categories = product_operations.get_all_categories()  # ✅ No request parameter needed
-            return Response({"categories": categories}, status=200)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
 
 
     

@@ -147,29 +147,13 @@ class StoreOperation:
             return JsonResponse({"error": f"Unexpected error: {str(e)}"}, status=500)
 
 
-
     def createCategory(self, data, db):
         try:
             # Validate inputs
-            store_id = data.get("store_id")
+
             category_name = data.get("category_name")
-
-            if not store_id or not category_name:
-                return JsonResponse({"error": "Store ID and Category Name are required."}, status=400)
-
-            # Validate the store existence
-            store = db['Stores'].find_one({"_id": ObjectId(store_id)})
-            if not store:
-                return JsonResponse({"error": "Store not found."}, status=404)
-
-            # Check for duplicate category in the store
-            existing_category = db['Categories'].find_one({"store_id": store_id, "category_name": category_name})
-            if existing_category:
-                return JsonResponse({"error": "Category already exists in this store."}, status=409)
-
             # Create the category
             category_data = {
-                "store_id": store_id,
                 "category_name": category_name,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
@@ -180,12 +164,148 @@ class StoreOperation:
             return JsonResponse({
                 "message": "Category created successfully.",
                 "category_id": str(result.inserted_id),
-                "store_id": store_id,
                 "category_name": category_name
             }, status=201)
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
+    def createSubcategory(self, data, db):
+        try:
+            # Validate inputs
+            parent_category_id = data.get("parent_category_id")
+            subcategory_name = data.get("name")
+            subcategory_image = data.get("imageid")  # Expecting image URL or path
+
+            if not parent_category_id or not subcategory_name or not subcategory_image:
+                return JsonResponse({"error": "Parent Category ID, Subcategory Name, and Subcategory Image are required."}, status=400)
+
+            try:
+                parent_category_id_obj = ObjectId(parent_category_id)
+            except Exception:
+                return JsonResponse({"error": "Invalid Parent Category ID."}, status=400)
+
+            # Validate the parent category existence
+            parent_category = db['Categories'].find_one({"_id": parent_category_id_obj})
+            if not parent_category:
+                return JsonResponse({"error": "Parent category not found."}, status=404)
+
+            # Check for duplicate subcategory under the same parent category
+            existing_subcategory = db['Subcategories'].find_one({"parent_category_id": parent_category_id, "subcategory_name": subcategory_name})
+            if existing_subcategory:
+                return JsonResponse({"error": "Subcategory already exists under this parent category."}, status=409)
+
+            # Create the subcategory
+            subcategory_data = {
+                "parent_category_id": parent_category_id,
+                "subcategory_name": subcategory_name,
+                "subcategory_image": subcategory_image,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+
+            result = db['Subcategories'].insert_one(subcategory_data)
+
+            return JsonResponse({
+                "message": "Subcategory created successfully.",
+                "subcategory_id": str(result.inserted_id),
+                "parent_category_id": parent_category_id,
+                "subcategory_name": subcategory_name,
+                "subcategory_image": subcategory_image
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+        
+    def createChildCategory(self, data, db):
+        try:
+            # Validate inputs
+            subcategory_id = data.get("subcategory_id")
+            child_category_name = data.get("child_category_name")
+
+            if not subcategory_id or not child_category_name :
+                return JsonResponse({"error": "Subcategory ID, Child Category Name, and Child Category Image are required."}, status=400)
+
+            try:
+                subcategory_id_obj = ObjectId(subcategory_id)
+            except Exception:
+                return JsonResponse({"error": "Invalid Subcategory ID."}, status=400)
+
+            # Validate the subcategory existence
+            subcategory = db['Subcategories'].find_one({"_id": subcategory_id_obj})
+            if not subcategory:
+                return JsonResponse({"error": "Subcategory not found."}, status=404)
+
+            # Check for duplicate child category under the same subcategory
+            existing_child_category = db['ChildCategories'].find_one({"subcategory_id": subcategory_id, "child_category_name": child_category_name})
+            if existing_child_category:
+                return JsonResponse({"error": "Child category already exists under this subcategory."}, status=409)
+
+            # Create the child category
+            child_category_data = {
+                "subcategory_id": subcategory_id,
+                "child_category_name": child_category_name,
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow()
+            }
+
+            result = db['ChildCategories'].insert_one(child_category_data)
+
+            return JsonResponse({
+                "message": "Child category created successfully.",
+                "child_category_id": str(result.inserted_id),
+                "subcategory_id": subcategory_id,
+                "child_category_name": child_category_name
+            }, status=201)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
+
+
+    def getAllCategories(self, db):
+        try:
+            categories_data = []
+
+            # Fetch all main categories
+            categories = list(db['Categories'].find({}))
+
+            for category in categories:
+                category_id = str(category["_id"])
+                category_name = category["category_name"]
+
+                # Fetch all subcategories for this category
+                subcategories_cursor = db['Subcategories'].find({"parent_category_id": category_id})
+                subcategories_data = []
+
+                for subcategory in subcategories_cursor:
+                    subcategory_id = str(subcategory["_id"])
+                    subcategory_name = subcategory["subcategory_name"]
+
+                    # Fetch all child categories under this subcategory
+                    child_categories_cursor = db['ChildCategories'].find({"subcategory_id": subcategory_id})
+                    child_categories = [{"cat_id": str(child["_id"]), "name": child["child_category_name"]} for child in child_categories_cursor]
+
+                    # Add subcategory to list
+                    subcategories_data.append({
+                        "cat_id": subcategory_id,
+                        "name": subcategory_name,
+                        "child_categories": child_categories
+                    })
+
+                # Add category and its subcategories to categories_data
+                categories_data.append({
+                    "cat_id": category_id,
+                    "name": category_name,
+                    "subcategories": subcategories_data
+                })
+
+            return JsonResponse({"categories": categories_data}, status=200)
+
+        except Exception as e:
+            return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
     def getCategoriesByStore(self, data, db):
         try:
@@ -265,6 +385,37 @@ class StoreOperation:
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
+    
+    def uploadMultipleImages(self, request):
+        try:
+            # Check if 'images' key exists in the request
+            if 'images' not in request.FILES:
+                return Response({"error": "No images provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Get the list of images
+            images = request.FILES.getlist('images')
+            uploaded_images = []
+
+            # Loop through each image and call the existing uploadImage method for each
+            for image_file in images:
+                # Create a dummy request object for each image
+                request._files = {'image': image_file}
+                # Call the existing uploadImage method for each image
+                response = self.uploadImage(request)
+
+                if response.status_code == status.HTTP_201_CREATED:
+                    uploaded_images.append(response.data)
+                else:
+                    return Response({"error": "Error uploading images"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({"uploaded_images": uploaded_images}, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        
+    
+
     def delete_image(self, data):
         """
         Delete a single image from the Amazon S3 bucket.
