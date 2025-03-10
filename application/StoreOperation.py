@@ -268,15 +268,15 @@ class StoreOperation:
         try:
             categories_data = []
 
-            # Fetch all main categories
-            categories = list(db['Categories'].find({}))
+            # Fetch all main categories with projections to limit the data returned
+            categories = list(db['Categories'].find({}, {"_id": 1, "category_name": 1}))
 
             for category in categories:
                 category_id = str(category["_id"])
                 category_name = category["category_name"]
 
                 # Fetch all subcategories for this category
-                subcategories_cursor = db['Subcategories'].find({"parent_category_id": category_id})
+                subcategories_cursor = db['Subcategories'].find({"parent_category_id": category_id}, {"_id": 1, "subcategory_name": 1})
                 subcategories_data = []
 
                 for subcategory in subcategories_cursor:
@@ -284,8 +284,16 @@ class StoreOperation:
                     subcategory_name = subcategory["subcategory_name"]
 
                     # Fetch all child categories under this subcategory
-                    child_categories_cursor = db['ChildCategories'].find({"subcategory_id": subcategory_id})
-                    child_categories = [{"cat_id": str(child["_id"]), "name": child["child_category_name"]} for child in child_categories_cursor]
+                    child_categories_cursor = db['ChildCategories'].find({"subcategory_id": subcategory_id}, {"_id": 1, "child_category_name": 1})
+                    child_categories = [
+                        {
+                            "cat_id": str(child["_id"]),
+                            "name": child["child_category_name"],
+                            "subcategory_id": subcategory_id,  # Add subcategory_id
+                            "parent_category_id": category_id  # Add parent_category_id
+                        }
+                        for child in child_categories_cursor
+                    ]
 
                     # Add subcategory to list
                     subcategories_data.append({
@@ -305,6 +313,7 @@ class StoreOperation:
 
         except Exception as e:
             return JsonResponse({"error": "Internal Server Error", "details": str(e)}, status=500)
+
 
 
     def getCategoriesByStore(self, data, db):
