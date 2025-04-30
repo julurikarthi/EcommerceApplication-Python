@@ -62,7 +62,7 @@ class ProductOperations:
                 return JsonResponse({"error": "Invalid store_id."}, status=400)
 
             # Check if category_id exists
-            category = db['Categories'].find_one({"_id": ObjectId(category_id), "store_id": store_id})
+            category = db['Categories'].find_one({"_id": ObjectId(category_id)})
             if not category:
                 return JsonResponse({"error": "Invalid category_id."}, status=400)
 
